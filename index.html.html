@@ -1,0 +1,3921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1d3a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Moments by Mia">
+<title>Moments by Mia — Booking Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&amp;family=Outfit:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzBmMWQzYSIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgZm9udC1mYW1pbHk9IkNvcm1vcmFudCBHYXJhbW9uZCxzZXJpZiIgZm9udC1zaXplPSI2MCIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjZjRjMmMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NPC90ZXh0Pjwvc3ZnPg==">
+<style>
+:root {
+  --navy: #0f1d3a;
+  --navy-deep: #0a1428;
+  --navy-soft: #1c2d52;
+  --pink: #f4c2c2;
+  --pink-soft: #fde4e4;
+  --pink-blush: #f9d5d5;
+  --pink-deep: #e89898;
+  --cream: #fdf9f5;
+  --gold: #c9a572;
+  --ink: #1a1a2e;
+  --shadow: 0 20px 60px rgba(15, 29, 58, 0.15);
+  --shadow-soft: 0 8px 24px rgba(15, 29, 58, 0.08);
+
+  /* Shoot type colors — extended palette that lives in the brand world */
+  --type-portrait: #e89898;
+  --type-family: #c9a572;
+  --type-maternity: #d4a8c4;
+  --type-newborn: #f4c2c2;
+  --type-engagement: #b89cc4;
+  --type-wedding: #8b7da8;
+  --type-bridal: #d4b8d8;
+  --type-senior: #a8c4b8;
+  --type-headshots: #1c2d52;
+  --type-branding: #5a6b8c;
+  --type-event: #c98572;
+  --type-boudoir: #9c5572;
+  --type-lifestyle: #a89c7c;
+  --type-other: #8c8c9c;
+  --type-blocked: #4a4a5e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body { overscroll-behavior-y: contain; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(244, 194, 194, 0.25) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(15, 29, 58, 0.06) 0%, transparent 40%);
+  min-height: 100vh;
+  color: var(--ink);
+  padding: 32px 20px 80px;
+  padding-top: max(32px, env(safe-area-inset-top));
+  padding-bottom: max(80px, env(safe-area-inset-bottom));
+}
+
+/* HEADER */
+.masthead { text-align: center; margin-bottom: 36px; position: relative; }
+.masthead::before {
+  content: ''; position: absolute; top: -16px; left: 50%;
+  transform: translateX(-50%); width: 60px; height: 1px; background: var(--navy);
+}
+.brand-mark {
+  font-size: 11px; letter-spacing: 0.4em; color: var(--navy);
+  text-transform: uppercase; margin-bottom: 16px; font-weight: 400;
+}
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 7vw, 88px);
+  font-weight: 300; color: var(--navy);
+  line-height: 1; letter-spacing: -0.02em; font-style: italic;
+}
+.brand-name .by {
+  font-size: 0.55em; font-style: italic;
+  color: var(--pink-deep); margin: 0 0.15em; font-weight: 400;
+}
+.brand-tagline {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  color: var(--navy-soft); font-size: 16px; margin-top: 10px; letter-spacing: 0.05em;
+}
+
+/* YEAR SELECTOR */
+.year-selector {
+  display: inline-flex; align-items: center; gap: 0;
+  margin-top: 20px; background: var(--navy);
+  border-radius: 2px; overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+.year-selector button {
+  background: transparent; color: var(--pink); border: none;
+  width: 38px; height: 38px; cursor: pointer; font-size: 18px;
+  transition: background 0.2s ease;
+}
+.year-selector button:hover, .year-selector button:active { background: var(--navy-deep); }
+.year-display {
+  color: var(--pink-soft); font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; letter-spacing: 0.4em; padding: 0 18px;
+  min-width: 110px; text-align: center;
+}
+
+/* TOP CONTROLS — primary trio + dropdown menu */
+.controls {
+  max-width: 1400px; margin: 0 auto 24px;
+  display: flex; gap: 8px; justify-content: center;
+  align-items: center; flex-wrap: wrap; padding: 0 4px;
+  position: relative;
+}
+.controls-primary {
+  display: flex; gap: 8px; align-items: center;
+}
+.menu-wrapper { position: relative; }
+.menu-btn {
+  background: transparent; color: var(--navy);
+  border: 1px solid var(--navy);
+  padding: 11px 16px;
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s ease; min-height: 44px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.menu-btn:hover, .menu-btn.active {
+  background: var(--navy); color: var(--cream);
+}
+.menu-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow); min-width: 240px;
+  z-index: 70; overflow: hidden;
+  border: 1px solid rgba(15, 29, 58, 0.08);
+  animation: menuDrop 0.18s ease;
+}
+@keyframes menuDrop {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.menu-dropdown.active { display: block; }
+.menu-section-label {
+  display: block; padding: 12px 18px 4px;
+  font-size: 9px; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--navy-soft);
+  font-weight: 500;
+}
+.menu-section-label:first-child { padding-top: 14px; }
+.menu-divider {
+  height: 1px; background: rgba(15, 29, 58, 0.08);
+  margin: 8px 0;
+}
+.menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 12px 18px;
+  background: transparent; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 12px;
+  color: var(--navy); text-align: left;
+  letter-spacing: 0.05em;
+  transition: background 0.15s ease;
+  font-weight: 400;
+}
+.menu-item:hover, .menu-item:active { background: var(--pink-soft); }
+.menu-item .menu-icon {
+  width: 18px; text-align: center; font-size: 14px;
+  color: var(--navy-soft); flex-shrink: 0;
+}
+.menu-item .menu-label {
+  flex: 1;
+}
+.menu-item .menu-status {
+  margin-left: auto; font-size: 9px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--navy-soft); font-weight: 500;
+}
+.menu-item .menu-status.on { color: var(--gold); }
+.menu-item .menu-status.synced { color: var(--gold); }
+
+.btn {
+  background: var(--navy); color: var(--cream);
+  border: none; padding: 11px 18px;
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s ease; font-weight: 400;
+  min-height: 44px;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { background: var(--pink-deep); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+.btn.btn-outline {
+  background: transparent; color: var(--navy); border: 1px solid var(--navy);
+}
+.btn.btn-outline:hover { background: var(--navy); color: var(--cream); }
+.btn.btn-pink { background: var(--pink-deep); }
+.btn.btn-pink:hover { background: var(--navy); }
+
+/* SEARCH BAR */
+.search-bar {
+  max-width: 600px; margin: 0 auto 24px; position: relative;
+}
+.search-bar input {
+  width: 100%; padding: 14px 20px 14px 46px;
+  border: 1px solid rgba(15, 29, 58, 0.15);
+  border-radius: 2px; font-family: 'Outfit', sans-serif;
+  font-size: 14px; background: white;
+  transition: all 0.2s ease;
+}
+.search-bar input:focus {
+  outline: none; border-color: var(--pink-deep);
+  box-shadow: 0 0 0 3px rgba(244, 194, 194, 0.2);
+}
+.search-bar::before {
+  content: '⌕'; position: absolute; left: 16px; top: 50%;
+  transform: translateY(-50%); color: var(--navy-soft);
+  font-size: 20px; pointer-events: none;
+}
+.search-results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: white; border-radius: 2px; box-shadow: var(--shadow);
+  max-height: 380px; overflow-y: auto; z-index: 50;
+  display: none;
+}
+.search-results.active { display: block; }
+.search-result {
+  padding: 14px 20px; border-bottom: 1px solid rgba(15, 29, 58, 0.06);
+  cursor: pointer; transition: background 0.15s ease;
+}
+.search-result:hover, .search-result:active { background: var(--pink-soft); }
+.search-result:last-child { border-bottom: none; }
+.search-result .sr-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 18px;
+  color: var(--navy); font-weight: 500;
+}
+.search-result .sr-name .canceled-badge {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px; vertical-align: middle;
+  margin-left: 6px;
+}
+.search-result .sr-meta {
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--pink-deep); margin-top: 2px;
+}
+.search-result .sr-detail {
+  font-size: 12px; color: var(--navy-soft); margin-top: 4px;
+}
+.search-empty {
+  padding: 24px; text-align: center; color: var(--navy-soft);
+  font-style: italic; font-family: 'Cormorant Garamond', serif;
+}
+
+/* SYNC STATUS PILL */
+.sync-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--navy-soft); padding: 6px 12px;
+  background: white; border-radius: 20px;
+  box-shadow: var(--shadow-soft); margin: 0 auto 24px;
+  max-width: max-content; transition: all 0.3s ease;
+}
+.sync-pill.syncing { color: var(--gold); }
+.sync-pill.synced { color: var(--navy-soft); }
+.sync-pill.error { color: var(--pink-deep); }
+.sync-pill .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+.sync-pill.syncing .dot { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+.sync-wrap { text-align: center; }
+
+/* GRID VIEW */
+.calendar-grid {
+  max-width: 1400px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.month-card {
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow-soft); overflow: hidden;
+  cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(15, 29, 58, 0.05); position: relative;
+}
+.month-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+.month-card:hover .month-header { background: var(--navy-deep); }
+.month-header {
+  background: var(--navy); color: white;
+  padding: 22px 26px; position: relative;
+  transition: background 0.3s ease;
+}
+.month-header::after {
+  content: ''; position: absolute; bottom: 0;
+  left: 26px; right: 26px; height: 1px;
+  background: linear-gradient(to right, var(--pink), transparent);
+}
+.month-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 34px;
+  font-weight: 300; font-style: italic; letter-spacing: 0.02em;
+}
+.month-meta {
+  font-size: 11px; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--pink); margin-top: 6px;
+}
+.month-preview { padding: 18px 26px 22px; min-height: 140px; }
+.day-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-top: 8px;
+}
+.day-label {
+  font-size: 9px; font-weight: 500; letter-spacing: 0.1em;
+  color: var(--navy-soft); text-align: center; padding: 4px 0;
+  text-transform: uppercase;
+}
+.day-cell {
+  aspect-ratio: 1; display: flex; align-items: center;
+  justify-content: center; font-size: 11px; color: var(--ink);
+  border-radius: 2px; position: relative;
+}
+.day-cell.empty { color: transparent; }
+.day-cell.has-shoot {
+  background: var(--pink-soft); color: var(--navy); font-weight: 500;
+}
+.day-cell.has-shoot::after {
+  content: ''; position: absolute; bottom: 2px; left: 50%;
+  transform: translateX(-50%); width: 4px; height: 4px;
+  background: var(--pink-deep); border-radius: 50%;
+}
+.day-cell.is-blocked {
+  background: rgba(74, 74, 94, 0.15); color: var(--navy-soft);
+  text-decoration: line-through;
+}
+.day-cell.is-today {
+  outline: 1.5px solid var(--gold); outline-offset: 1px;
+}
+.shoot-count {
+  margin-top: 14px; font-size: 11px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--pink-deep);
+  display: flex; align-items: center; gap: 8px;
+}
+.shoot-count::before {
+  content: ''; width: 20px; height: 1px; background: var(--pink-deep);
+}
+
+/* EXPANDED MONTH VIEW */
+.month-detail {
+  display: none; max-width: 1200px; margin: 0 auto;
+  background: white; border-radius: 4px; box-shadow: var(--shadow);
+  overflow: hidden; animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.month-detail.active { display: block; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.detail-header {
+  background: var(--navy); color: white;
+  padding: 22px 36px 26px; position: relative; overflow: hidden;
+}
+.detail-header::before {
+  content: ''; position: absolute;
+  top: -40px; right: -40px; width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--pink) 0%, transparent 70%);
+  opacity: 0.3;
+}
+.detail-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px; position: relative; z-index: 2; gap: 8px;
+  flex-wrap: wrap;
+}
+.nav-btn {
+  background: transparent;
+  border: 1px solid rgba(244, 194, 194, 0.4);
+  color: var(--pink); padding: 9px 14px;
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s ease; min-height: 38px;
+}
+.nav-btn:hover, .nav-btn:active {
+  background: var(--pink); color: var(--navy); border-color: var(--pink);
+}
+.detail-month-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 4.5vw, 52px);
+  font-weight: 300; font-style: italic;
+  line-height: 1; letter-spacing: -0.01em;
+  position: relative; z-index: 2;
+}
+.detail-year {
+  font-size: 11px; letter-spacing: 0.4em;
+  color: var(--pink); margin-top: 8px;
+  position: relative; z-index: 2;
+}
+
+/* FULL CALENDAR */
+.full-calendar { padding: 26px 36px 32px; }
+/* The calendar is an 8-column grid: rail (col 1) + 7 day columns (col 2-8).
+   Putting the rail and the day cells in the same grid makes their rows
+   share the same auto height, so each WK button sits next to its row. */
+.calendar-grid-master {
+  display: grid;
+  grid-template-columns: 38px repeat(7, 1fr);
+  gap: 8px;
+  align-items: stretch;
+}
+.calendar-grid-master .weekday {
+  text-align: center; font-size: 11px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--navy); font-weight: 500;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(15, 29, 58, 0.1);
+}
+.calendar-grid-master .weekday-spacer {
+  /* sits above the rail column; matches weekday border alignment */
+  border-bottom: 1px solid rgba(15, 29, 58, 0.1);
+}
+.week-rail-btn {
+  background: var(--cream);
+  border: 1px solid transparent;
+  border-radius: 4px; cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; color: var(--navy-soft);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  transition: all 0.2s ease; gap: 2px;
+  font-weight: 500;
+  /* fills its grid cell */
+  width: 100%; height: 100%;
+}
+.week-rail-btn .wk-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; font-style: italic;
+  color: var(--navy); font-weight: 500;
+  letter-spacing: 0;
+}
+.week-rail-btn:hover {
+  background: var(--pink-soft);
+  border-color: var(--pink-blush);
+}
+.week-rail-btn:hover .wk-num { color: var(--pink-deep); }
+.full-day {
+  aspect-ratio: 1; background: var(--cream);
+  border-radius: 4px; padding: 8px;
+  cursor: pointer; transition: all 0.25s ease;
+  border: 1.5px solid transparent;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  min-height: 90px;
+}
+.full-day:hover {
+  border-color: var(--pink-deep); background: white;
+  box-shadow: var(--shadow-soft);
+}
+.full-day.empty {
+  background: transparent; cursor: default; pointer-events: none;
+}
+.full-day.has-bookings {
+  background: linear-gradient(135deg, var(--pink-soft) 0%, white 100%);
+  border-color: var(--pink-blush);
+}
+.full-day.is-today {
+  border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201, 165, 114, 0.2);
+}
+.full-day.is-blocked {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(74, 74, 94, 0.06),
+    rgba(74, 74, 94, 0.06) 6px,
+    rgba(74, 74, 94, 0.12) 6px,
+    rgba(74, 74, 94, 0.12) 12px
+  );
+  border-color: rgba(74, 74, 94, 0.25);
+}
+.full-day.is-blocked .day-number { color: var(--type-blocked); }
+.full-day.has-reminder::before {
+  content: ''; position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 2px white, 0 0 8px rgba(201, 165, 114, 0.5);
+  z-index: 2;
+}
+.day-number {
+  font-family: 'Cormorant Garamond', serif; font-size: 22px;
+  font-weight: 500; color: var(--navy); margin-bottom: 6px;
+}
+.day-bookings {
+  flex: 1; display: flex; flex-direction: column;
+  gap: 3px; overflow: hidden;
+}
+.booking-pill {
+  font-size: 9px; padding: 3px 6px;
+  border-radius: 2px; letter-spacing: 0.05em;
+  white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; font-weight: 500;
+  color: white; background: var(--navy);
+}
+.blocked-pill {
+  background: var(--type-blocked); color: var(--cream);
+  font-style: italic; letter-spacing: 0.1em;
+}
+
+/* MOBILE BOTTOM SHEET MODAL */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(15, 29, 58, 0.6);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+.modal-backdrop.active {
+  display: flex;
+  align-items: center; justify-content: center;
+  padding: 20px;
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+.modal {
+  background: var(--cream); border-radius: 4px;
+  max-width: 540px; width: 100%; max-height: 90vh;
+  overflow-y: auto; box-shadow: var(--shadow);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.modal-header {
+  background: var(--navy); color: white;
+  padding: 22px 28px 18px; position: relative;
+  position: sticky; top: 0; z-index: 5;
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 26px;
+  font-style: italic; font-weight: 300;
+}
+.modal-date {
+  font-size: 11px; letter-spacing: 0.22em;
+  color: var(--pink); margin-top: 4px; text-transform: uppercase;
+}
+.modal-actions {
+  position: absolute; top: 18px; right: 18px;
+  display: flex; gap: 6px;
+}
+.modal-icon-btn {
+  background: transparent;
+  border: 1px solid rgba(244, 194, 194, 0.3);
+  color: var(--pink); width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer;
+  font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s ease;
+}
+.modal-icon-btn:hover { background: var(--pink); color: var(--navy); }
+
+.day-menu-wrap { position: relative; }
+.day-menu {
+  display: none;
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow); min-width: 220px;
+  z-index: 10; overflow: hidden;
+  border: 1px solid rgba(15, 29, 58, 0.08);
+  animation: menuDrop 0.18s ease;
+}
+.day-menu.active { display: block; }
+
+.modal-body { padding: 0; }
+
+.modal-toolbar {
+  position: sticky; top: 80px;
+  background: var(--cream); padding: 14px 28px;
+  z-index: 4;
+  border-bottom: 1px solid rgba(15, 29, 58, 0.06);
+  display: flex; gap: 10px; align-items: center;
+}
+.modal-toolbar .add-shoot-btn {
+  flex: 1; padding: 12px;
+  background: var(--navy); color: var(--pink-soft);
+  border: none; font-family: 'Outfit', sans-serif;
+  font-size: 11px; letter-spacing: 0.22em;
+  text-transform: uppercase; cursor: pointer;
+  border-radius: 2px; transition: all 0.3s ease;
+  min-height: 44px;
+}
+.modal-toolbar .add-shoot-btn:hover,
+.modal-toolbar .add-shoot-btn.active {
+  background: var(--pink-deep); color: white;
+}
+
+.modal-content { padding: 18px 28px 32px; }
+
+/* Block Day inline option (in day menu) */
+.toggle {
+  position: relative; width: 36px; height: 20px;
+  background: rgba(15, 29, 58, 0.15); border-radius: 10px;
+  cursor: pointer; transition: background 0.25s ease;
+  flex-shrink: 0; pointer-events: none;
+}
+.toggle.active { background: var(--type-blocked); }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px; background: white;
+  border-radius: 50%; transition: transform 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle.active::after { transform: translateX(16px); }
+
+.blocked-banner {
+  display: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(74, 74, 94, 0.08),
+    rgba(74, 74, 94, 0.08) 6px,
+    rgba(74, 74, 94, 0.14) 6px,
+    rgba(74, 74, 94, 0.14) 12px
+  );
+  border: 1px solid rgba(74, 74, 94, 0.25);
+  border-radius: 2px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12px; letter-spacing: 0.15em;
+  color: var(--type-blocked);
+  text-transform: uppercase; font-weight: 500;
+  text-align: center;
+}
+.blocked-banner.active { display: block; }
+
+.bookings-list { margin-bottom: 18px; }
+.booking-item {
+  background: white; margin-bottom: 10px;
+  border-radius: 2px; box-shadow: var(--shadow-soft);
+  border-left: 3px solid var(--pink-deep);
+  overflow: hidden;
+}
+.booking-item.canceled {
+  opacity: 0.65; border-left-style: dashed;
+  background: rgba(15, 29, 58, 0.03);
+}
+.booking-item.canceled .booking-name { text-decoration: line-through; }
+.booking-summary {
+  padding: 14px 18px; cursor: pointer;
+  display: flex; justify-content: space-between;
+  align-items: center; gap: 12px;
+  transition: background 0.15s ease;
+}
+.booking-summary:hover, .booking-summary:active { background: var(--pink-soft); }
+.booking-summary-left { flex: 1; min-width: 0; }
+.booking-summary-right {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.booking-chevron {
+  width: 10px; height: 10px;
+  border-right: 1.5px solid var(--navy-soft);
+  border-bottom: 1.5px solid var(--navy-soft);
+  transform: rotate(45deg);
+  transition: transform 0.25s ease;
+  margin-bottom: 3px;
+}
+.booking-item.expanded .booking-chevron {
+  transform: rotate(-135deg); margin-bottom: -3px;
+}
+.booking-detail {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease;
+  border-top: 1px solid transparent;
+}
+.booking-item.expanded .booking-detail {
+  max-height: 600px;
+  border-top-color: rgba(15, 29, 58, 0.08);
+}
+.booking-detail-inner { padding: 14px 18px 16px; }
+.booking-item.type-portrait { border-left-color: var(--type-portrait); }
+.booking-item.type-family { border-left-color: var(--type-family); }
+.booking-item.type-maternity { border-left-color: var(--type-maternity); }
+.booking-item.type-newborn { border-left-color: var(--type-newborn); }
+.booking-item.type-engagement { border-left-color: var(--type-engagement); }
+.booking-item.type-wedding { border-left-color: var(--type-wedding); }
+.booking-item.type-bridal { border-left-color: var(--type-bridal); }
+.booking-item.type-senior-portrait { border-left-color: var(--type-senior); }
+.booking-item.type-headshots { border-left-color: var(--type-headshots); }
+.booking-item.type-branding { border-left-color: var(--type-branding); }
+.booking-item.type-event { border-left-color: var(--type-event); }
+.booking-item.type-boudoir { border-left-color: var(--type-boudoir); }
+.booking-item.type-lifestyle { border-left-color: var(--type-lifestyle); }
+.booking-item.type-other { border-left-color: var(--type-other); }
+
+.booking-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; color: var(--navy); font-weight: 500;
+  line-height: 1.2;
+}
+.booking-meta-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 4px; flex-wrap: wrap;
+}
+.booking-time {
+  font-size: 10px; letter-spacing: 0.18em;
+  color: var(--pink-deep); text-transform: uppercase;
+  font-weight: 500;
+}
+.booking-type {
+  display: inline-block; padding: 2px 8px;
+  color: white; font-size: 9px;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border-radius: 2px; background: var(--navy);
+}
+.canceled-badge {
+  display: inline-block; padding: 2px 8px;
+  color: var(--cream); background: var(--type-blocked);
+  font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; border-radius: 2px;
+  font-style: italic;
+}
+.booking-contact {
+  display: flex; flex-direction: column; gap: 6px;
+  font-size: 13px; color: var(--navy-soft);
+  margin-bottom: 10px;
+}
+.booking-contact a { color: var(--navy); text-decoration: none; }
+.booking-contact a:hover { color: var(--pink-deep); }
+.booking-contact .ico {
+  display: inline-block; width: 16px; opacity: 0.6;
+  font-size: 11px; margin-right: 6px;
+}
+.booking-notes {
+  font-size: 13px; color: var(--navy-soft);
+  font-style: italic; margin-bottom: 10px;
+  padding: 8px 10px; background: var(--cream); border-radius: 2px;
+}
+.booking-reminder {
+  font-size: 11px; letter-spacing: 0.1em;
+  color: var(--gold); text-transform: uppercase;
+  font-weight: 500; margin-bottom: 10px;
+}
+.cancel-info {
+  font-size: 11px; color: var(--type-blocked);
+  font-style: italic; margin-bottom: 10px;
+  padding: 8px 10px; background: rgba(74, 74, 94, 0.06);
+  border-radius: 2px;
+}
+.cancel-info .lbl {
+  text-transform: uppercase; letter-spacing: 0.15em;
+  font-style: normal; font-size: 9px;
+  color: var(--type-blocked); display: block; margin-bottom: 2px;
+  font-weight: 600;
+}
+.booking-actions {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.booking-action-btn {
+  background: transparent;
+  border: 1px solid rgba(15, 29, 58, 0.15);
+  padding: 7px 12px; font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  color: var(--navy); font-family: 'Outfit', sans-serif;
+  transition: all 0.2s ease; min-height: 34px;
+}
+.booking-action-btn:hover { background: var(--navy); color: white; }
+.booking-action-btn.cancel:hover {
+  background: var(--type-blocked); border-color: var(--type-blocked); color: white;
+}
+.booking-action-btn.uncancel:hover {
+  background: var(--gold); border-color: var(--gold); color: white;
+}
+.booking-action-btn.delete:hover {
+  background: var(--pink-deep); border-color: var(--pink-deep); color: white;
+}
+.no-bookings {
+  text-align: center; padding: 26px 16px;
+  color: var(--navy-soft); font-style: italic;
+  font-family: 'Cormorant Garamond', serif; font-size: 17px;
+}
+
+/* Inline cancel UI (replaces native prompt) */
+.cancel-prompt {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--cream);
+  border: 1px solid var(--type-blocked);
+  border-radius: 2px;
+}
+.cancel-prompt-label {
+  display: block; font-size: 10px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--type-blocked); margin-bottom: 8px;
+  font-weight: 600;
+}
+.cancel-prompt textarea {
+  width: 100%; padding: 10px 12px;
+  border: 1px solid rgba(15, 29, 58, 0.15);
+  border-radius: 2px; font-family: 'Outfit', sans-serif;
+  font-size: 14px; color: var(--ink); background: white;
+  resize: vertical; min-height: 60px;
+}
+.cancel-prompt textarea:focus {
+  outline: none; border-color: var(--type-blocked);
+  box-shadow: 0 0 0 3px rgba(74, 74, 94, 0.15);
+}
+.cancel-prompt-actions {
+  display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+}
+.cancel-prompt-actions .booking-action-btn { flex: 1; min-width: 110px; }
+.cancel-prompt-actions .confirm {
+  background: var(--type-blocked); color: white;
+  border-color: var(--type-blocked);
+}
+.cancel-prompt-actions .confirm:hover {
+  background: var(--navy-deep); border-color: var(--navy-deep);
+}
+
+/* Form section is hidden by default in new modal */
+.form-section { display: none; }
+.form-section.active { display: block; margin-top: 14px; }
+
+/* FORM */
+.form-section {
+  background: white; padding: 22px;
+  border-radius: 4px; border: 1px solid rgba(15, 29, 58, 0.08);
+}
+.form-title {
+  font-family: 'Cormorant Garamond', serif; font-size: 22px;
+  font-style: italic; color: var(--navy);
+  margin-bottom: 16px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--pink-blush);
+}
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: 10px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--navy); margin-bottom: 6px; font-weight: 500;
+}
+.form-input, .form-select {
+  width: 100%; padding: 12px 14px;
+  border: 1px solid rgba(15, 29, 58, 0.15);
+  border-radius: 2px; font-family: 'Outfit', sans-serif;
+  font-size: 16px; /* prevents iOS zoom */
+  color: var(--ink); background: var(--cream);
+  transition: all 0.2s ease; min-height: 44px;
+}
+.form-input:focus, .form-select:focus {
+  outline: none; border-color: var(--pink-deep);
+  background: white; box-shadow: 0 0 0 3px rgba(244, 194, 194, 0.2);
+}
+.form-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.btn-save {
+  width: 100%; margin-top: 8px; padding: 16px;
+  background: var(--navy); color: var(--pink-soft); border: none;
+  font-family: 'Outfit', sans-serif; font-size: 12px;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s ease; min-height: 50px;
+}
+.btn-save:hover { background: var(--pink-deep); color: white; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--navy); color: var(--pink-soft);
+  padding: 14px 24px; border-radius: 2px;
+  font-size: 12px; letter-spacing: 0.18em;
+  text-transform: uppercase; z-index: 200;
+  box-shadow: var(--shadow);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 90vw;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--pink-deep); }
+
+/* FOOTER */
+.foot {
+  text-align: center; margin-top: 50px; padding-top: 26px;
+  border-top: 1px solid rgba(15, 29, 58, 0.1);
+  max-width: 1400px; margin-left: auto; margin-right: auto;
+}
+.foot-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; color: var(--navy-soft); font-size: 15px;
+}
+.foot-decoration {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; margin-bottom: 10px; color: var(--pink-deep);
+}
+.foot-decoration::before, .foot-decoration::after {
+  content: ''; width: 50px; height: 1px; background: var(--pink-deep);
+}
+
+/* MOBILE — bottom sheet behavior, larger tap targets, compact header */
+@media (max-width: 768px) {
+  body { padding: 20px 14px 60px; padding-top: max(20px, env(safe-area-inset-top)); }
+  .masthead { margin-bottom: 24px; }
+  .brand-tagline { font-size: 14px; }
+  .controls { gap: 8px; margin-bottom: 18px; }
+  .btn { padding: 10px 14px; font-size: 10px; letter-spacing: 0.15em; }
+  .full-calendar { padding: 14px 8px 20px; }
+  .calendar-grid-master {
+    grid-template-columns: 22px repeat(7, 1fr);
+    gap: 4px;
+  }
+  .calendar-grid-master .weekday {
+    font-size: 9px; letter-spacing: 0.15em;
+    padding-bottom: 10px;
+  }
+  .week-rail-btn {
+    font-size: 8px; letter-spacing: 0.05em;
+  }
+  .week-rail-btn .wk-num { font-size: 13px; }
+  /* Compact detail-view header on mobile — was eating ~25% of viewport */
+  .detail-header { padding: 14px 16px 16px; }
+  .detail-header::before {
+    width: 80px; height: 80px; top: -25px; right: -25px;
+  }
+  .detail-nav { margin-bottom: 10px; }
+  .detail-month-name {
+    font-size: 24px; line-height: 1;
+  }
+  .detail-year { font-size: 9px; letter-spacing: 0.3em; margin-top: 4px; }
+  .full-day { min-height: 64px; padding: 5px; border-radius: 3px; }
+  .day-number { font-size: 15px; margin-bottom: 3px; }
+  .booking-pill { font-size: 8px; padding: 2px 4px; }
+  /* Agenda compact on mobile */
+  .agenda-header { padding: 14px 16px 18px; }
+  .agenda-header::before { width: 80px; height: 80px; top: -25px; right: -25px; }
+  .agenda-title { font-size: 22px; }
+  .agenda-range { font-size: 9px; letter-spacing: 0.25em; margin-top: 5px; }
+  .agenda-day { padding: 14px 18px; }
+  .agenda-day-row { gap: 14px; }
+  .agenda-day-date { min-width: 56px; }
+  .agenda-day-num { font-size: 30px; }
+  .agenda-day-name { font-size: 9px; letter-spacing: 0.2em; }
+  .as-name { font-size: 16px; }
+  .modal-backdrop.active {
+    align-items: flex-end; padding: 0;
+  }
+  .modal {
+    max-width: 100%; max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    animation: slideUpMobile 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes slideUpMobile {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-header { padding: 18px 20px 14px; border-radius: 16px 16px 0 0; }
+  .modal-toolbar { top: 70px; padding: 12px 20px; }
+  .modal-content { padding: 14px 20px 26px; }
+  .modal-title { font-size: 22px; }
+  .modal-date { font-size: 10px; letter-spacing: 0.2em; }
+  .modal-actions { top: 14px; right: 14px; }
+  .modal-icon-btn { width: 32px; height: 32px; font-size: 16px; }
+  .form-row { grid-template-columns: 1fr; }
+  .month-card { box-shadow: var(--shadow-soft); }
+  .month-header { padding: 18px 22px; }
+  .month-name { font-size: 30px; }
+  .month-preview { padding: 16px 22px 20px; }
+  .calendar-grid { gap: 16px; }
+  .nav-btn { padding: 8px 12px; font-size: 10px; letter-spacing: 0.15em; }
+  .search-bar input { font-size: 16px; }
+  .print-bar { bottom: 14px; right: 14px; }
+  /* Reports view mobile */
+  .reports-header { padding: 14px 16px 16px; }
+  .reports-header::before { width: 80px; height: 80px; top: -25px; right: -25px; }
+  .reports-title { font-size: 22px; }
+  .reports-subtitle { font-size: 9px; letter-spacing: 0.25em; margin-top: 5px; }
+  .report-tab { padding: 14px 16px; font-size: 10px; letter-spacing: 0.15em; }
+  .report-body { padding: 20px 16px 30px; }
+  .report-controls { gap: 8px; }
+  .report-print-btn { font-size: 9px; padding: 8px 12px; letter-spacing: 0.15em; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 30px; }
+  .chart-grid { grid-template-columns: 1fr; gap: 16px; }
+  .chart-card { padding: 16px; }
+  .report-h { font-size: 20px; }
+  .type-table th, .type-table td { padding: 8px 6px; font-size: 12px; }
+  .type-table .name { font-size: 14px; }
+  .upcoming-shoot { padding: 10px 12px; }
+  .upcoming-shoot-name { font-size: 15px; }
+}
+
+/* AGENDA / WEEK VIEW */
+.agenda-view {
+  display: none; max-width: 800px; margin: 0 auto;
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow); overflow: hidden;
+  animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.agenda-view.active { display: block; }
+.agenda-header {
+  background: var(--navy); color: white;
+  padding: 20px 36px 24px; position: relative; overflow: hidden;
+}
+.agenda-header::before {
+  content: ''; position: absolute;
+  top: -40px; right: -40px; width: 130px; height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--pink) 0%, transparent 70%);
+  opacity: 0.3;
+}
+.agenda-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; position: relative; z-index: 2; gap: 8px;
+  flex-wrap: wrap;
+}
+.agenda-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 300; font-style: italic;
+  line-height: 1; letter-spacing: -0.01em;
+  position: relative; z-index: 2;
+}
+.agenda-range {
+  font-size: 11px; letter-spacing: 0.35em;
+  color: var(--pink); margin-top: 7px;
+  position: relative; z-index: 2; text-transform: uppercase;
+}
+.agenda-body { padding: 20px 0 30px; }
+.agenda-day {
+  padding: 18px 40px; border-bottom: 1px solid rgba(15, 29, 58, 0.06);
+  cursor: pointer; transition: background 0.15s ease;
+}
+.agenda-day:hover, .agenda-day:active { background: var(--pink-soft); }
+.agenda-day:last-child { border-bottom: none; }
+.agenda-day.is-today { background: linear-gradient(to right, rgba(201, 165, 114, 0.08), transparent); }
+.agenda-day.is-today .agenda-day-num { color: var(--gold); }
+.agenda-day-row {
+  display: flex; align-items: flex-start; gap: 20px;
+}
+.agenda-day-date {
+  flex-shrink: 0; min-width: 80px;
+}
+.agenda-day-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px; font-weight: 500; color: var(--navy);
+  line-height: 1;
+}
+.agenda-day-name {
+  font-size: 10px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--navy-soft);
+  margin-top: 4px;
+}
+.agenda-day-shoots {
+  flex: 1; display: flex; flex-direction: column; gap: 8px;
+}
+.agenda-shoot {
+  padding: 10px 14px; background: var(--cream);
+  border-left: 3px solid var(--pink-deep);
+  border-radius: 2px;
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 12px;
+}
+.agenda-shoot.canceled {
+  opacity: 0.55; border-left-style: dashed;
+  background: rgba(15, 29, 58, 0.04);
+}
+.agenda-shoot.canceled .as-name { text-decoration: line-through; }
+.as-info { flex: 1; min-width: 0; }
+.as-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: var(--navy); font-weight: 500;
+}
+.as-meta {
+  font-size: 11px; letter-spacing: 0.1em;
+  color: var(--navy-soft); margin-top: 2px;
+  text-transform: uppercase;
+}
+.as-time {
+  font-size: 11px; letter-spacing: 0.18em;
+  color: var(--pink-deep); text-transform: uppercase;
+  font-weight: 500; flex-shrink: 0; text-align: right;
+}
+.agenda-blocked-tag {
+  display: inline-block; padding: 4px 10px;
+  background: var(--type-blocked); color: var(--cream);
+  font-size: 10px; letter-spacing: 0.15em;
+  text-transform: uppercase; border-radius: 2px;
+  font-style: italic;
+}
+.agenda-empty {
+  font-style: italic; color: var(--navy-soft);
+  font-family: 'Cormorant Garamond', serif; font-size: 16px;
+  padding: 4px 0;
+}
+
+/* ============================================================
+   REPORTS VIEW
+   ============================================================ */
+.reports-view {
+  display: none; max-width: 1200px; margin: 0 auto;
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow); overflow: hidden;
+  animation: fadeUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.reports-view.active { display: block; }
+.reports-header {
+  background: var(--navy); color: white;
+  padding: 22px 36px 26px; position: relative; overflow: hidden;
+}
+.reports-header::before {
+  content: ''; position: absolute;
+  top: -40px; right: -40px; width: 140px; height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--pink) 0%, transparent 70%);
+  opacity: 0.3;
+}
+.reports-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; position: relative; z-index: 2; gap: 8px;
+  flex-wrap: wrap;
+}
+.reports-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 300; font-style: italic;
+  line-height: 1; letter-spacing: -0.01em;
+  position: relative; z-index: 2;
+}
+.reports-subtitle {
+  font-size: 11px; letter-spacing: 0.35em;
+  color: var(--pink); margin-top: 7px;
+  position: relative; z-index: 2;
+  text-transform: uppercase;
+}
+
+.reports-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid rgba(15, 29, 58, 0.08);
+  background: var(--cream);
+  overflow-x: auto;
+}
+.report-tab {
+  background: transparent; border: none;
+  padding: 16px 24px; cursor: pointer;
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--navy-soft); font-weight: 400;
+  position: relative; transition: color 0.2s ease;
+  white-space: nowrap; flex-shrink: 0;
+  min-height: 48px;
+}
+.report-tab:hover { color: var(--navy); }
+.report-tab.active {
+  color: var(--navy); font-weight: 500;
+}
+.report-tab.active::after {
+  content: ''; position: absolute;
+  bottom: -1px; left: 24px; right: 24px;
+  height: 2px; background: var(--pink-deep);
+}
+
+.report-body { padding: 28px 36px 36px; }
+.report-section { display: none; }
+.report-section.active { display: block; }
+
+.report-controls {
+  display: flex; gap: 10px; align-items: center;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.report-year-picker {
+  display: inline-flex; align-items: center;
+  background: white; border: 1px solid rgba(15, 29, 58, 0.15);
+  border-radius: 2px; overflow: hidden;
+}
+.report-year-picker button {
+  background: transparent; border: none;
+  width: 36px; height: 36px; cursor: pointer;
+  color: var(--navy); font-size: 16px;
+  transition: background 0.2s ease;
+}
+.report-year-picker button:hover { background: var(--pink-soft); }
+.report-year-picker .yr {
+  padding: 0 16px;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 18px; color: var(--navy);
+  min-width: 70px; text-align: center;
+}
+.report-print-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--navy); color: var(--navy);
+  padding: 9px 16px;
+  font-family: 'Outfit', sans-serif; font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.report-print-btn:hover { background: var(--navy); color: var(--cream); }
+
+/* Stat cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px; margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--cream); border-radius: 4px;
+  padding: 20px;
+  border-left: 3px solid var(--pink-deep);
+}
+.stat-card.completed { border-left-color: var(--gold); }
+.stat-card.canceled { border-left-color: var(--type-blocked); }
+.stat-card.upcoming { border-left-color: var(--navy); }
+.stat-card.warning {
+  border-left-color: var(--type-event);
+  background: rgba(201, 133, 114, 0.08);
+}
+.stat-label {
+  font-size: 10px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--navy-soft);
+  font-weight: 500; margin-bottom: 8px;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px; font-weight: 500; color: var(--navy);
+  line-height: 1; font-style: italic;
+}
+.stat-meta {
+  font-size: 11px; color: var(--navy-soft);
+  margin-top: 6px; font-style: italic;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Section heading */
+.report-h {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-style: italic; color: var(--navy);
+  font-weight: 400; margin-bottom: 14px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--pink-blush);
+}
+
+/* Two-column layout for charts */
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.chart-card {
+  background: var(--cream); border-radius: 4px;
+  padding: 22px;
+}
+
+/* SVG bar chart */
+.bar-chart { width: 100%; height: 240px; }
+.bar-chart .bar { transition: opacity 0.2s ease; }
+.bar-chart .bar:hover { opacity: 0.75; }
+.bar-chart .bar-label {
+  font-family: 'Outfit', sans-serif; font-size: 9px;
+  fill: var(--navy-soft); text-anchor: middle;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.bar-chart .bar-value {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 13px; fill: var(--navy);
+  text-anchor: middle; font-weight: 500;
+}
+.bar-chart .axis-line { stroke: rgba(15, 29, 58, 0.1); stroke-width: 1; }
+
+/* SVG donut */
+.donut-chart {
+  width: 100%; max-width: 240px;
+  height: auto; display: block; margin: 0 auto;
+}
+.donut-center .total {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; font-style: italic;
+  fill: var(--navy); font-weight: 500;
+}
+.donut-center .label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px; fill: var(--navy-soft);
+  letter-spacing: 0.25em; text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Type legend */
+.type-legend {
+  display: flex; flex-direction: column; gap: 0;
+  margin-top: 16px;
+}
+.legend-row {
+  display: grid; grid-template-columns: 14px 1fr auto auto;
+  gap: 10px; align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(15, 29, 58, 0.08);
+  font-size: 13px;
+}
+.legend-row:last-child { border-bottom: none; }
+.legend-swatch {
+  width: 12px; height: 12px; border-radius: 2px;
+}
+.legend-name { color: var(--navy); }
+.legend-count {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 16px;
+  color: var(--navy); font-weight: 500;
+}
+.legend-pct {
+  font-size: 10px; letter-spacing: 0.15em;
+  color: var(--navy-soft); text-transform: uppercase;
+  min-width: 44px; text-align: right;
+}
+
+/* Upcoming list */
+.upcoming-day {
+  margin-bottom: 18px;
+}
+.upcoming-day-header {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: var(--navy);
+  font-weight: 500; margin-bottom: 8px;
+  padding-bottom: 6px; font-style: italic;
+  border-bottom: 1px solid var(--pink-blush);
+}
+.upcoming-shoot {
+  background: var(--cream); border-left: 3px solid var(--pink-deep);
+  padding: 12px 14px; border-radius: 2px;
+  margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 12px;
+  cursor: pointer; transition: background 0.15s ease;
+}
+.upcoming-shoot:hover { background: var(--pink-soft); }
+.upcoming-shoot-info { flex: 1; min-width: 0; }
+.upcoming-shoot-name {
+  font-family: 'Cormorant Garamond', serif; font-size: 17px;
+  color: var(--navy); font-weight: 500;
+}
+.upcoming-shoot-meta {
+  font-size: 11px; letter-spacing: 0.1em;
+  color: var(--navy-soft); margin-top: 2px;
+  text-transform: uppercase;
+}
+.upcoming-shoot-time {
+  font-size: 11px; letter-spacing: 0.18em;
+  color: var(--pink-deep); text-transform: uppercase;
+  font-weight: 500; flex-shrink: 0; text-align: right;
+}
+.hygiene-flag {
+  display: inline-block; padding: 2px 8px;
+  background: var(--type-event); color: white;
+  font-size: 9px; letter-spacing: 0.15em;
+  text-transform: uppercase; border-radius: 2px;
+  margin-left: 6px;
+}
+
+/* Type breakdown table */
+.type-table {
+  width: 100%; border-collapse: collapse;
+  margin-top: 12px;
+}
+.type-table th {
+  font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--navy-soft);
+  font-weight: 500; text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15, 29, 58, 0.1);
+}
+.type-table th.num { text-align: right; }
+.type-table td {
+  padding: 12px; border-bottom: 1px solid rgba(15, 29, 58, 0.04);
+  font-size: 14px; color: var(--navy);
+}
+.type-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.type-table td .swatch {
+  display: inline-block; width: 12px; height: 12px;
+  border-radius: 2px; vertical-align: middle; margin-right: 8px;
+}
+.type-table tr:hover td { background: var(--pink-soft); }
+.type-table .name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-weight: 500;
+  font-style: italic;
+}
+
+/* Empty state */
+.report-empty {
+  text-align: center; padding: 50px 20px;
+  color: var(--navy-soft); font-style: italic;
+  font-family: 'Cormorant Garamond', serif; font-size: 18px;
+}
+
+/* PRINT BAR */
+.print-bar {
+  position: fixed; bottom: 20px; right: 20px;
+  z-index: 60; display: flex; gap: 8px;
+}
+.print-bar .btn {
+  padding: 10px 16px; font-size: 10px;
+  letter-spacing: 0.15em; box-shadow: var(--shadow);
+}
+
+/* PRINT SHEET (hidden screen, shown when printing) */
+.print-sheet { display: none; }
+
+/* PRINT */
+@media print {
+  @page { margin: 0.5in; }
+  body {
+    background: white; padding: 0;
+    background-image: none;
+  }
+  .controls, .modal-backdrop, .nav-btn, .month-card,
+  .search-bar, .sync-wrap, .year-selector,
+  .agenda-view, .month-detail, .calendar-grid, .reports-view,
+  .masthead .brand-mark, .print-bar, .toast,
+  .booking-actions { display: none !important; }
+
+  .print-sheet { display: block !important; }
+  .print-sheet .ps-masthead {
+    text-align: center; margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--navy);
+  }
+  .print-sheet .ps-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px; font-style: italic;
+    color: var(--navy); font-weight: 300;
+  }
+  .print-sheet .ps-brand .by { color: var(--pink-deep); font-size: 0.55em; margin: 0 0.15em; }
+  .print-sheet .ps-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; color: var(--navy);
+    font-size: 24px; margin-top: 10px;
+  }
+  .print-sheet .ps-range {
+    font-size: 11px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--navy-soft);
+    margin-top: 6px;
+  }
+  .print-sheet .ps-day {
+    margin-bottom: 18px; page-break-inside: avoid;
+  }
+  .print-sheet .ps-day-header {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; color: var(--navy);
+    border-bottom: 1px solid var(--pink-deep);
+    padding-bottom: 4px; margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .print-sheet .ps-shoot {
+    margin: 6px 0 6px 12px; padding: 4px 0;
+    border-left: 2px solid var(--pink-deep);
+    padding-left: 12px; page-break-inside: avoid;
+  }
+  .print-sheet .ps-shoot.canceled { opacity: 0.6; border-left-style: dashed; }
+  .print-sheet .ps-shoot.canceled .ps-name { text-decoration: line-through; }
+  .print-sheet .ps-shoot-row {
+    display: flex; justify-content: space-between;
+    align-items: baseline; gap: 12px;
+  }
+  .print-sheet .ps-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; color: var(--navy); font-weight: 500;
+  }
+  .print-sheet .ps-time {
+    font-size: 10px; letter-spacing: 0.15em;
+    color: var(--navy-soft); text-transform: uppercase;
+  }
+  .print-sheet .ps-detail {
+    font-size: 11px; color: var(--navy-soft);
+    margin-top: 3px; line-height: 1.5;
+  }
+  .print-sheet .ps-detail .lbl {
+    text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 9px; color: var(--navy);
+    margin-right: 4px;
+  }
+  .print-sheet .ps-blocked {
+    font-style: italic; color: var(--navy-soft);
+    margin-left: 12px;
+  }
+  .print-sheet .ps-empty {
+    color: var(--navy-soft); font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    margin-left: 12px;
+  }
+  .print-sheet .ps-foot {
+    margin-top: 30px; padding-top: 14px;
+    border-top: 1px solid rgba(15, 29, 58, 0.2);
+    text-align: center; font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--navy-soft);
+  }
+  /* Report-specific print styles */
+  .print-sheet .ps-stats {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 6px 24px; margin-bottom: 18px;
+    font-size: 12px;
+  }
+  .print-sheet .ps-stats > div { padding: 4px 0; }
+  .print-sheet .ps-stat-label {
+    text-transform: uppercase; letter-spacing: 0.15em;
+    font-size: 10px; color: var(--navy-soft);
+    margin-right: 8px;
+  }
+  .print-sheet .ps-stats strong {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; font-style: italic;
+    font-weight: 500; color: var(--navy);
+  }
+  .print-sheet .ps-section-h {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 18px;
+    color: var(--navy); margin: 18px 0 8px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--pink-deep);
+    font-weight: 500;
+  }
+  .print-sheet .ps-table {
+    width: 100%; border-collapse: collapse;
+    margin-bottom: 12px;
+  }
+  .print-sheet .ps-table th {
+    text-align: left; font-size: 9px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--navy-soft); padding: 6px 8px;
+    border-bottom: 1px solid var(--navy);
+    font-weight: 500;
+  }
+  .print-sheet .ps-table th.num { text-align: right; }
+  .print-sheet .ps-table td {
+    padding: 5px 8px; font-size: 11px;
+    border-bottom: 1px dotted rgba(15, 29, 58, 0.15);
+    color: var(--navy);
+  }
+  .print-sheet .ps-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+}
+
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="brand-mark">Photography · Portraits · Memories</div>
+  <h1 class="brand-name">Moments<span class="by">by</span>Mia</h1>
+  <p class="brand-tagline">Capturing life's most beautiful chapters</p>
+  <div class="year-selector">
+    <button onclick="changeYear(-1)" aria-label="Previous year">‹</button>
+    <div class="year-display" id="yearDisplay">2 0 2 6</div>
+    <button onclick="changeYear(1)" aria-label="Next year">›</button>
+  </div>
+</header>
+
+<div class="sync-wrap">
+  <div class="sync-pill" id="syncPill">
+    <span class="dot"></span>
+    <span id="syncText">Saved on this device</span>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="controls-primary">
+    <button class="btn" onclick="showAllMonths()" id="btnYearView">Year</button>
+    <button class="btn btn-outline" onclick="showAgendaView()" id="btnWeekView">Week</button>
+    <button class="btn btn-outline" onclick="showReportsView()" id="btnReportsView">Reports</button>
+    <button class="btn btn-outline" onclick="goToToday()">Today</button>
+  </div>
+  <div class="menu-wrapper">
+    <button class="menu-btn" id="menuBtn" onclick="toggleMainMenu(event)" aria-haspopup="true" aria-expanded="false">
+      Tools <span style="font-size:10px;margin-left:2px">▾</span>
+    </button>
+    <div class="menu-dropdown" id="mainMenu">
+      <div class="menu-section-label">Backup &amp; Sync</div>
+      <button class="menu-item" onclick="connectGoogleDrive();closeMainMenu()" id="driveMenuItem">
+        <span class="menu-icon">☁</span>
+        <span class="menu-label">Connect Google Drive</span>
+        <span class="menu-status" id="driveStatus"></span>
+      </button>
+      <button class="menu-item" onclick="exportJSON();closeMainMenu()">
+        <span class="menu-icon">⤓</span> Download Backup
+      </button>
+      <button class="menu-item" onclick="document.getElementById('importFile').click();closeMainMenu()">
+        <span class="menu-icon">⤒</span> Restore from Backup
+      </button>
+      <div class="menu-divider"></div>
+      <div class="menu-section-label">Calendar</div>
+      <button class="menu-item" onclick="exportICS();closeMainMenu()">
+        <span class="menu-icon">📅</span> Export to .ics
+      </button>
+      <button class="menu-item" onclick="enableNotifications();closeMainMenu()" id="notifMenuItem">
+        <span class="menu-icon">🔔</span>
+        <span class="menu-label">Enable Reminders</span>
+        <span class="menu-status" id="notifStatus"></span>
+      </button>
+      <button class="menu-item" onclick="printCurrentView();closeMainMenu()">
+        <span class="menu-icon">🖨</span> Print Current View
+      </button>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search clients across all years…" autocomplete="off">
+  <div class="search-results" id="searchResults"></div>
+</div>
+
+<!-- GRID VIEW -->
+<div class="calendar-grid" id="gridView"></div>
+
+<!-- DETAIL VIEW -->
+<div class="month-detail" id="detailView">
+  <div class="detail-header">
+    <div class="detail-nav">
+      <button class="nav-btn" onclick="showAllMonths()">← All Months</button>
+      <div>
+        <button class="nav-btn" onclick="navigateMonth(-1)">← Prev</button>
+        <button class="nav-btn" onclick="navigateMonth(1)" style="margin-left:8px">Next →</button>
+      </div>
+    </div>
+    <h2 class="detail-month-name" id="detailMonthName">January</h2>
+    <p class="detail-year" id="detailYear">2 0 2 6</p>
+  </div>
+  <div class="full-calendar">
+    <div class="calendar-grid-master" id="calendarGridMaster">
+      <!-- Header row: spacer above rail, then 7 weekday labels -->
+      <div class="weekday-spacer"></div>
+      <div class="weekday">Sun</div><div class="weekday">Mon</div>
+      <div class="weekday">Tue</div><div class="weekday">Wed</div>
+      <div class="weekday">Thu</div><div class="weekday">Fri</div>
+      <div class="weekday">Sat</div>
+      <!-- Subsequent rows are populated by renderFullCalendar:
+           rail button + 7 day cells per row -->
+    </div>
+  </div>
+</div>
+
+<!-- AGENDA / WEEK VIEW -->
+<div class="agenda-view" id="agendaView">
+  <div class="agenda-header">
+    <div class="agenda-nav">
+      <button class="nav-btn" onclick="showAllMonths()">← All Months</button>
+      <div>
+        <button class="nav-btn" onclick="navigateAgenda(-1)">← Prev Week</button>
+        <button class="nav-btn" onclick="navigateAgenda(1)" style="margin-left:8px">Next Week →</button>
+      </div>
+    </div>
+    <h2 class="agenda-title" id="agendaTitle">This Week</h2>
+    <p class="agenda-range" id="agendaRange">—</p>
+  </div>
+  <div class="agenda-body" id="agendaBody"></div>
+</div>
+
+<!-- REPORTS VIEW -->
+<div class="reports-view" id="reportsView">
+  <div class="reports-header">
+    <div class="reports-nav">
+      <button class="nav-btn" onclick="showAllMonths()">← All Months</button>
+    </div>
+    <h2 class="reports-title">Reports</h2>
+    <p class="reports-subtitle">Business at a glance</p>
+  </div>
+  <div class="reports-tabs">
+    <button class="report-tab active" data-tab="summary" onclick="switchReportTab('summary')">Year Summary</button>
+    <button class="report-tab" data-tab="upcoming" onclick="switchReportTab('upcoming')">Upcoming</button>
+    <button class="report-tab" data-tab="types" onclick="switchReportTab('types')">Types</button>
+  </div>
+  <div class="report-body">
+    <!-- YEAR SUMMARY -->
+    <div class="report-section active" id="reportSummary">
+      <div class="report-controls">
+        <div class="report-year-picker">
+          <button onclick="changeReportYear(-1)" aria-label="Previous year">‹</button>
+          <span class="yr" id="reportYearDisplay">2026</span>
+          <button onclick="changeReportYear(1)" aria-label="Next year">›</button>
+        </div>
+        <button class="report-print-btn" onclick="printReport('summary')">🖨 Print Report</button>
+      </div>
+      <div id="summaryContent"></div>
+    </div>
+
+    <!-- UPCOMING -->
+    <div class="report-section" id="reportUpcoming">
+      <div class="report-controls">
+        <button class="report-print-btn" onclick="printReport('upcoming')">🖨 Print Report</button>
+      </div>
+      <div id="upcomingContent"></div>
+    </div>
+
+    <!-- TYPES -->
+    <div class="report-section" id="reportTypes">
+      <div class="report-controls">
+        <div class="report-year-picker">
+          <button onclick="changeReportYear(-1)" aria-label="Previous year">‹</button>
+          <span class="yr" id="reportYearDisplay2">2026</span>
+          <button onclick="changeReportYear(1)" aria-label="Next year">›</button>
+        </div>
+        <button class="report-print-btn" onclick="printReport('types')">🖨 Print Report</button>
+      </div>
+      <div id="typesContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT SHEET (only visible in print) -->
+<div class="print-sheet" id="printSheet"></div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-actions">
+        <button class="modal-icon-btn" onclick="printCurrentDay()" aria-label="Print this day" title="Print this day">⎙</button>
+        <div class="day-menu-wrap">
+          <button class="modal-icon-btn" onclick="toggleDayMenu(event)" aria-label="More options" title="More" id="dayMenuBtn">⋯</button>
+          <div class="day-menu" id="dayMenu">
+            <button class="menu-item" onclick="toggleBlockDay();closeDayMenu()">
+              <span class="menu-icon">⛔</span>
+              <span class="menu-label" id="blockDayLabel">Block this day</span>
+              <span class="menu-status" id="blockDayStatus"></span>
+            </button>
+          </div>
+        </div>
+        <button class="modal-icon-btn" onclick="closeModal()" aria-label="Close">×</button>
+      </div>
+      <h3 class="modal-title">Bookings</h3>
+      <p class="modal-date" id="modalDate">—</p>
+    </div>
+
+    <div class="modal-toolbar">
+      <button class="add-shoot-btn" id="addShootBtn" onclick="toggleAddForm()">+ Add Shoot</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-content">
+        <div class="blocked-banner" id="blockedBanner">
+          ⛔ This day is blocked / personal
+        </div>
+
+        <div class="bookings-list" id="bookingsList"></div>
+
+        <div class="form-section" id="formSection">
+        <h4 class="form-title" id="formTitle">Add New Shoot</h4>
+        <div class="form-group">
+          <label class="form-label">Client Name</label>
+          <input type="text" class="form-input" id="clientName" placeholder="e.g. Sarah Johnson">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="tel" class="form-input" id="clientPhone" placeholder="(555) 123-4567">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="clientEmail" placeholder="sarah@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Time</label>
+            <input type="time" class="form-input" id="shootTime">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duration</label>
+            <select class="form-select" id="shootDuration">
+              <option value="30 min">30 min</option>
+              <option value="1 hour" selected>1 hour</option>
+              <option value="1.5 hours">1.5 hours</option>
+              <option value="2 hours">2 hours</option>
+              <option value="3 hours">3 hours</option>
+              <option value="Half day">Half day</option>
+              <option value="Full day">Full day</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shoot Type</label>
+          <select class="form-select" id="shootType">
+            <option value="Portrait">Portrait</option>
+            <option value="Family">Family</option>
+            <option value="Maternity">Maternity</option>
+            <option value="Newborn">Newborn</option>
+            <option value="Engagement">Engagement</option>
+            <option value="Wedding">Wedding</option>
+            <option value="Bridal">Bridal</option>
+            <option value="Senior Portrait">Senior Portrait</option>
+            <option value="Headshots">Headshots</option>
+            <option value="Branding">Branding</option>
+            <option value="Event">Event</option>
+            <option value="Boudoir">Boudoir</option>
+            <option value="Lifestyle">Lifestyle</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reminder</label>
+          <select class="form-select" id="shootReminder">
+            <option value="">No reminder</option>
+            <option value="60">1 hour before</option>
+            <option value="180">3 hours before</option>
+            <option value="1440" selected>1 day before</option>
+            <option value="2880">2 days before</option>
+            <option value="10080">1 week before</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location / Notes</label>
+          <input type="text" class="form-input" id="shootNotes" placeholder="Optional location or notes">
+        </div>
+        <button class="btn-save" id="saveBtn" onclick="saveBooking()">Save Booking</button>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="foot">
+  <div class="foot-decoration">✦</div>
+  <p class="foot-text">Every moment matters · Every memory lasts forever</p>
+</footer>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const TYPE_CLASS = {
+  'Portrait': 'type-portrait', 'Family': 'type-family',
+  'Maternity': 'type-maternity', 'Newborn': 'type-newborn',
+  'Engagement': 'type-engagement', 'Wedding': 'type-wedding',
+  'Bridal': 'type-bridal', 'Senior Portrait': 'type-senior-portrait',
+  'Headshots': 'type-headshots', 'Branding': 'type-branding',
+  'Event': 'type-event', 'Boudoir': 'type-boudoir',
+  'Lifestyle': 'type-lifestyle', 'Other': 'type-other'
+};
+const TYPE_COLORS = {
+  'Portrait': 'var(--type-portrait)', 'Family': 'var(--type-family)',
+  'Maternity': 'var(--type-maternity)', 'Newborn': 'var(--type-newborn)',
+  'Engagement': 'var(--type-engagement)', 'Wedding': 'var(--type-wedding)',
+  'Bridal': 'var(--type-bridal)', 'Senior Portrait': 'var(--type-senior)',
+  'Headshots': 'var(--type-headshots)', 'Branding': 'var(--type-branding)',
+  'Event': 'var(--type-event)', 'Boudoir': 'var(--type-boudoir)',
+  'Lifestyle': 'var(--type-lifestyle)', 'Other': 'var(--type-other)'
+};
+
+let YEAR = new Date().getFullYear();
+let bookings = {}; // { "YYYY-MM-DD": { blocked: bool, items: [{...}] } }
+let currentMonth = new Date().getMonth();
+let currentDateKey = null;
+let editingIndex = null;
+let driveToken = null;
+let driveFileId = null;
+let saveDebounce = null;
+let currentView = 'year'; // 'year' | 'month' | 'week'
+let agendaAnchor = startOfWeek(new Date()); // Sunday of the week being viewed
+let expandedBookingIdx = null; // which booking is expanded in the modal
+let cancelingIdx = null; // which booking is showing the inline cancel prompt
+
+const STORAGE_KEY = 'mbm_calendar_v2';
+const DRIVE_TOKEN_KEY = 'mbm_drive_token';
+const DRIVE_FILE_KEY = 'mbm_drive_file_id';
+
+/* ============================================================
+   PERSISTENCE — IndexedDB primary, localStorage fallback
+   ============================================================ */
+const DB_NAME = 'MomentsByMiaDB';
+const DB_STORE = 'data';
+let dbInstance = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (dbInstance) return resolve(dbInstance);
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { dbInstance = req.result; resolve(dbInstance); };
+    req.onupgradeneeded = e => {
+      e.target.result.createObjectStore(DB_STORE);
+    };
+  });
+}
+
+async function dbGet(key) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readonly');
+      const req = tx.objectStore(DB_STORE).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) { return null; }
+}
+
+async function dbSet(key, value) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(DB_STORE, 'readwrite');
+      tx.objectStore(DB_STORE).put(value, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (e) { /* fall through to localStorage */ }
+}
+
+async function loadBookings() {
+  let data = null;
+  try { data = await dbGet(STORAGE_KEY); } catch(e) {}
+  if (!data) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) data = JSON.parse(raw);
+    } catch(e) {}
+  }
+  if (data && typeof data === 'object') bookings = data;
+
+  // Restore Drive credentials
+  try {
+    const tokenRaw = localStorage.getItem(DRIVE_TOKEN_KEY);
+    if (tokenRaw) {
+      const t = JSON.parse(tokenRaw);
+      if (t.expiresAt && t.expiresAt > Date.now()) {
+        driveToken = t.token;
+      }
+    }
+    driveFileId = localStorage.getItem(DRIVE_FILE_KEY);
+  } catch(e) {}
+}
+
+async function saveBookings({ syncToCloud = true } = {}) {
+  // Local
+  try { await dbSet(STORAGE_KEY, bookings); } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings)); } catch(e) {}
+
+  // Cloud (debounced)
+  if (syncToCloud && driveToken) {
+    clearTimeout(saveDebounce);
+    saveDebounce = setTimeout(syncToDrive, 1500);
+  }
+  updateSyncPill();
+}
+
+/* ============================================================
+   SYNC PILL
+   ============================================================ */
+function updateSyncPill(state) {
+  const pill = document.getElementById('syncPill');
+  const text = document.getElementById('syncText');
+  pill.classList.remove('syncing', 'synced', 'error');
+  if (state === 'syncing') {
+    pill.classList.add('syncing');
+    text.textContent = 'Syncing to Drive…';
+  } else if (state === 'error') {
+    pill.classList.add('error');
+    text.textContent = 'Sync failed — saved locally';
+  } else if (driveToken) {
+    pill.classList.add('synced');
+    text.textContent = 'Synced to Google Drive';
+  } else {
+    text.textContent = 'Saved on this device';
+  }
+}
+
+/* ============================================================
+   GOOGLE DRIVE SYNC
+   Uses the Google Identity Services OAuth implicit flow.
+   The user signs in once; token is cached in localStorage with expiry.
+   File: appDataFolder/moments-by-mia-bookings.json (private to this app)
+   ============================================================ */
+const GOOGLE_CLIENT_ID = ''; // ← Mia fills this in; instructions printed in console below
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILENAME = 'moments-by-mia-bookings.json';
+
+function loadGoogleScript() {
+  return new Promise((resolve, reject) => {
+    if (window.google?.accounts) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true; s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Failed to load Google Identity Services'));
+    document.head.appendChild(s);
+  });
+}
+
+async function connectGoogleDrive() {
+  if (!GOOGLE_CLIENT_ID) {
+    showToast(
+      'Drive sync needs a one-time setup — see browser console for instructions',
+      'error', 6000
+    );
+    console.log(
+      '%c=== Moments by Mia — Google Drive Setup ===',
+      'font-weight: bold; color: #0f1d3a; font-size: 14px'
+    );
+    console.log(
+      'To enable automatic Google Drive backup:\n\n' +
+      '1. Go to https://console.cloud.google.com/apis/credentials\n' +
+      '2. Create a new OAuth 2.0 Client ID (Web application)\n' +
+      '3. Add your site URL to "Authorized JavaScript origins"\n' +
+      '   (e.g., https://yourname.github.io)\n' +
+      '4. Copy the Client ID and paste it into this HTML file:\n' +
+      '   Replace the empty GOOGLE_CLIENT_ID = "" at the top of <script> with your ID.\n\n' +
+      'Until then, your data still saves locally on this device, and you can use\n' +
+      'the Backup/Restore buttons to download/upload JSON files manually.'
+    );
+    return;
+  }
+  try {
+    await loadGoogleScript();
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: DRIVE_SCOPE,
+      callback: async (resp) => {
+        if (resp.error) { showToast('Sign-in failed', 'error'); return; }
+        driveToken = resp.access_token;
+        const expiresAt = Date.now() + (resp.expires_in - 60) * 1000;
+        localStorage.setItem(DRIVE_TOKEN_KEY, JSON.stringify({ token: driveToken, expiresAt }));
+        showToast('Connected to Google Drive');
+        await syncToDrive();
+        updateSyncPill();
+      }
+    });
+    client.requestAccessToken();
+  } catch(e) {
+    showToast('Could not connect to Drive', 'error');
+  }
+}
+
+async function findDriveFile() {
+  const r = await fetch(
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILENAME}'&fields=files(id,name)`,
+    { headers: { Authorization: `Bearer ${driveToken}` } }
+  );
+  if (!r.ok) throw new Error('Drive list failed');
+  const data = await r.json();
+  if (data.files && data.files.length) {
+    driveFileId = data.files[0].id;
+    localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
+  }
+  return driveFileId;
+}
+
+async function syncToDrive() {
+  if (!driveToken) return;
+  updateSyncPill('syncing');
+  try {
+    if (!driveFileId) await findDriveFile();
+    const payload = JSON.stringify({
+      version: 2,
+      lastModified: new Date().toISOString(),
+      bookings
+    }, null, 2);
+    const metadata = { name: DRIVE_FILENAME, parents: ['appDataFolder'] };
+    const boundary = 'mbm_boundary_' + Math.random().toString(36).slice(2);
+    const body =
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+      JSON.stringify(metadata) +
+      `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n` +
+      payload + `\r\n--${boundary}--`;
+    const url = driveFileId
+      ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`
+      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    const r = await fetch(url, {
+      method: driveFileId ? 'PATCH' : 'POST',
+      headers: {
+        Authorization: `Bearer ${driveToken}`,
+        'Content-Type': `multipart/related; boundary=${boundary}`
+      },
+      body
+    });
+    if (!r.ok) throw new Error('Upload failed');
+    const data = await r.json();
+    if (data.id) {
+      driveFileId = data.id;
+      localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
+    }
+    updateSyncPill();
+  } catch(e) {
+    console.warn('Drive sync error', e);
+    updateSyncPill('error');
+  }
+}
+
+async function restoreFromDrive() {
+  if (!driveToken || !driveFileId) return false;
+  try {
+    const r = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+      { headers: { Authorization: `Bearer ${driveToken}` } }
+    );
+    if (!r.ok) return false;
+    const data = await r.json();
+    if (data.bookings) {
+      bookings = data.bookings;
+      await saveBookings({ syncToCloud: false });
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+/* ============================================================
+   IMPORT / EXPORT
+   ============================================================ */
+function exportJSON() {
+  const blob = new Blob([JSON.stringify({
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    bookings
+  }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `moments-by-mia-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const data = JSON.parse(reader.result);
+      const incoming = data.bookings || data; // accept v1 or v2
+      if (typeof incoming !== 'object') throw new Error('Invalid file');
+      if (!confirm('This will merge with your current bookings. Continue?')) return;
+      // Merge — incoming takes precedence on conflict
+      Object.keys(incoming).forEach(key => {
+        const v = incoming[key];
+        // Migrate v1 array shape to v2 object shape
+        bookings[key] = Array.isArray(v) ? { blocked: false, items: v } : v;
+      });
+      await saveBookings();
+      renderCurrentView();
+      showToast('Restore complete');
+    } catch(err) {
+      showToast('Could not read file', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function exportICS() {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Moments by Mia//Booking Calendar//EN',
+    'CALSCALE:GREGORIAN'
+  ];
+  Object.keys(bookings).forEach(key => {
+    const day = bookings[key];
+    if (!day.items) return;
+    day.items.forEach((b, i) => {
+      const [y, m, d] = key.split('-').map(Number);
+      const start = parseTimeToDate(y, m, d, b.time);
+      const dur = parseDuration(b.duration);
+      const end = new Date(start.getTime() + dur * 60000);
+      const fmt = dt => dt.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:${key}-${i}@momentsbymia`);
+      lines.push(`DTSTAMP:${fmt(new Date())}`);
+      lines.push(`DTSTART:${fmt(start)}`);
+      lines.push(`DTEND:${fmt(end)}`);
+      const summaryPrefix = b.canceled ? 'CANCELED — ' : '';
+      lines.push(`SUMMARY:${escapeICS(summaryPrefix + b.type + ' — ' + b.name)}`);
+      if (b.canceled) lines.push('STATUS:CANCELLED');
+      const desc = [
+        b.phone ? `Phone: ${b.phone}` : '',
+        b.email ? `Email: ${b.email}` : '',
+        b.notes ? `Notes: ${b.notes}` : '',
+        b.canceled ? `Canceled${b.cancelReason ? ': ' + b.cancelReason : ''}` : ''
+      ].filter(Boolean).join('\\n');
+      if (desc) lines.push(`DESCRIPTION:${escapeICS(desc)}`);
+      if (b.notes) lines.push(`LOCATION:${escapeICS(b.notes)}`);
+      if (b.reminder && !b.canceled) {
+        lines.push('BEGIN:VALARM');
+        lines.push(`TRIGGER:-PT${b.reminder}M`);
+        lines.push('ACTION:DISPLAY');
+        lines.push(`DESCRIPTION:${escapeICS(b.name)}`);
+        lines.push('END:VALARM');
+      }
+      lines.push('END:VEVENT');
+    });
+  });
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `moments-by-mia-${YEAR}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Calendar (.ics) downloaded');
+}
+
+function escapeICS(s) {
+  return String(s || '').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+}
+
+function parseTimeToDate(y, m, d, timeStr) {
+  const match = (timeStr || '9:00 AM').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  let hr = 9, mn = 0;
+  if (match) {
+    hr = parseInt(match[1]);
+    mn = parseInt(match[2]);
+    const ap = match[3].toUpperCase();
+    if (ap === 'PM' && hr !== 12) hr += 12;
+    if (ap === 'AM' && hr === 12) hr = 0;
+  }
+  return new Date(y, m - 1, d, hr, mn);
+}
+
+function parseDuration(d) {
+  const map = {
+    '30 min': 30, '1 hour': 60, '1.5 hours': 90,
+    '2 hours': 120, '3 hours': 180,
+    'Half day': 240, 'Full day': 480
+  };
+  return map[d] || 60;
+}
+
+/* ============================================================
+   NOTIFICATIONS / REMINDERS
+   ============================================================ */
+async function enableNotifications() {
+  if (!('Notification' in window)) {
+    showToast('Notifications not supported on this device', 'error');
+    return;
+  }
+  const result = await Notification.requestPermission();
+  if (result === 'granted') {
+    showToast('Reminders enabled');
+    scheduleAllReminders();
+  } else {
+    showToast('Reminders blocked — enable in browser settings', 'error');
+  }
+}
+
+const scheduledTimers = [];
+function scheduleAllReminders() {
+  scheduledTimers.forEach(t => clearTimeout(t));
+  scheduledTimers.length = 0;
+  if (Notification.permission !== 'granted') return;
+
+  const now = Date.now();
+  const horizon = now + 24 * 60 * 60 * 1000; // schedule next 24h only
+
+  Object.keys(bookings).forEach(key => {
+    const day = bookings[key];
+    if (!day.items) return;
+    day.items.forEach(b => {
+      if (!b.reminder || b.canceled) return;
+      const [y, m, d] = key.split('-').map(Number);
+      const shootTime = parseTimeToDate(y, m, d, b.time).getTime();
+      const remindAt = shootTime - parseInt(b.reminder) * 60000;
+      if (remindAt > now && remindAt < horizon) {
+        const t = setTimeout(() => {
+          new Notification(`Upcoming shoot: ${b.name}`, {
+            body: `${b.type} at ${b.time}${b.notes ? ' · ' + b.notes : ''}`,
+            tag: `mbm-${key}-${b.name}`
+          });
+        }, remindAt - now);
+        scheduledTimers.push(t);
+      }
+    });
+  });
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function dateKey(year, month, day) {
+  return `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+function dateKeyFromDate(d) { return dateKey(d.getFullYear(), d.getMonth(), d.getDate()); }
+function daysInMonth(year, month) { return new Date(year, month+1, 0).getDate(); }
+function firstDayOfMonth(year, month) { return new Date(year, month, 1).getDay(); }
+function todayKey() {
+  const t = new Date();
+  return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
+}
+function startOfWeek(d) {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() - out.getDay()); // Sunday
+  return out;
+}
+function addDays(d, n) {
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  out.setDate(out.getDate() + n);
+  return out;
+}
+function formatDateLong(d) {
+  return d.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+}
+function formatDateShort(d) {
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(msg, type = '', duration = 2400) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type === 'error' ? ' error' : '');
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ============================================================
+   RENDER — Grid View
+   ============================================================ */
+function renderGrid() {
+  const grid = document.getElementById('gridView');
+  grid.innerHTML = '';
+  const today = todayKey();
+  MONTHS.forEach((name, idx) => {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+    card.onclick = () => showMonth(idx);
+
+    const totalDays = daysInMonth(YEAR, idx);
+    const firstDay = firstDayOfMonth(YEAR, idx);
+    let shootCount = 0;
+    let daysHTML = '';
+
+    ['S','M','T','W','T','F','S'].forEach(d => {
+      daysHTML += `<div class="day-label">${d}</div>`;
+    });
+    for (let i = 0; i < firstDay; i++) {
+      daysHTML += '<div class="day-cell empty">·</div>';
+    }
+    for (let d = 1; d <= totalDays; d++) {
+      const key = dateKey(YEAR, idx, d);
+      const day = bookings[key];
+      const activeItems = (day && day.items) ? day.items.filter(b => !b.canceled) : [];
+      const hasBookings = activeItems.length > 0;
+      const blocked = day && day.blocked;
+      shootCount += activeItems.length;
+      const cls = [
+        'day-cell',
+        hasBookings ? 'has-shoot' : '',
+        blocked ? 'is-blocked' : '',
+        key === today ? 'is-today' : ''
+      ].filter(Boolean).join(' ');
+      daysHTML += `<div class="${cls}">${d}</div>`;
+    }
+    card.innerHTML = `
+      <div class="month-header">
+        <div class="month-name">${name}</div>
+        <div class="month-meta">Month ${String(idx+1).padStart(2,'0')} · ${YEAR}</div>
+      </div>
+      <div class="month-preview">
+        <div class="day-grid">${daysHTML}</div>
+        <div class="shoot-count">${shootCount} ${shootCount === 1 ? 'Shoot' : 'Shoots'} Booked</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ============================================================
+   RENDER — Detail View
+   ============================================================ */
+function showMonth(monthIdx) {
+  currentView = 'month';
+  currentMonth = monthIdx;
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').classList.add('active');
+  document.getElementById('agendaView').classList.remove('active');
+  document.getElementById('reportsView').classList.remove('active');
+  document.getElementById('detailMonthName').textContent = MONTHS[monthIdx];
+  document.getElementById('detailYear').textContent = String(YEAR).split('').join(' ');
+  renderFullCalendar(monthIdx);
+  updateViewButtons();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAllMonths() {
+  currentView = 'year';
+  document.getElementById('gridView').style.display = 'grid';
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('agendaView').classList.remove('active');
+  document.getElementById('reportsView').classList.remove('active');
+  renderGrid();
+  updateViewButtons();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showAgendaView() {
+  currentView = 'week';
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('reportsView').classList.remove('active');
+  document.getElementById('agendaView').classList.add('active');
+  renderAgenda();
+  updateViewButtons();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateViewButtons() {
+  const map = {
+    year: 'btnYearView',
+    week: 'btnWeekView',
+    reports: 'btnReportsView'
+  };
+  // Reset all to outline
+  Object.values(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('btn-outline');
+  });
+  // Highlight active (month view doesn't highlight any of the toolbar buttons,
+  // since drilling into a specific month is a sub-state of year view)
+  const activeId = map[currentView];
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) el.classList.remove('btn-outline');
+  }
+}
+
+function navigateMonth(direction) {
+  let newMonth = currentMonth + direction;
+  if (newMonth < 0) {
+    newMonth = 11;
+    YEAR--;
+    document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+  }
+  if (newMonth > 11) {
+    newMonth = 0;
+    YEAR++;
+    document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+  }
+  showMonth(newMonth);
+}
+
+function navigateAgenda(direction) {
+  agendaAnchor = addDays(agendaAnchor, direction * 7);
+  renderAgenda();
+}
+
+function changeYear(delta) {
+  YEAR += delta;
+  document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+  renderCurrentView();
+}
+
+function goToToday() {
+  const t = new Date();
+  const yearChanged = YEAR !== t.getFullYear();
+  YEAR = t.getFullYear();
+  document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+
+  if (currentView === 'week') {
+    agendaAnchor = startOfWeek(t);
+    renderAgenda();
+    flashTodayHighlight();
+  } else if (currentView === 'month') {
+    if (currentMonth !== t.getMonth() || yearChanged) {
+      showMonth(t.getMonth());
+    } else {
+      // Already on current month — flash today
+      flashTodayHighlight();
+    }
+  } else {
+    // Year view: jump to current month detail
+    showMonth(t.getMonth());
+  }
+}
+
+function flashTodayHighlight() {
+  // Briefly pulse the today cell so user knows the button worked
+  setTimeout(() => {
+    document.querySelectorAll('.is-today, .agenda-day.is-today').forEach(el => {
+      el.style.transition = 'background-color 0.4s ease, box-shadow 0.4s ease';
+      const orig = el.style.boxShadow;
+      el.style.boxShadow = '0 0 0 3px rgba(201, 165, 114, 0.5)';
+      setTimeout(() => { el.style.boxShadow = orig || ''; }, 800);
+    });
+  }, 100);
+}
+
+/* ============================================================
+   MENU HANDLERS
+   ============================================================ */
+function toggleMainMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('mainMenu');
+  const btn = document.getElementById('menuBtn');
+  const isActive = menu.classList.toggle('active');
+  btn.classList.toggle('active', isActive);
+  btn.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+  // Refresh status indicators when opening
+  if (isActive) updateMenuStatuses();
+}
+function closeMainMenu() {
+  document.getElementById('mainMenu').classList.remove('active');
+  document.getElementById('menuBtn').classList.remove('active');
+  document.getElementById('menuBtn').setAttribute('aria-expanded', 'false');
+}
+function toggleDayMenu(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('dayMenu').classList.toggle('active');
+  updateBlockDayLabel();
+}
+function closeDayMenu() {
+  document.getElementById('dayMenu').classList.remove('active');
+}
+function updateMenuStatuses() {
+  const driveStatus = document.getElementById('driveStatus');
+  const driveItem = document.getElementById('driveMenuItem');
+  const driveLabel = driveItem ? driveItem.querySelector('.menu-label') : null;
+  if (driveToken) {
+    driveStatus.textContent = 'Synced';
+    driveStatus.className = 'menu-status synced';
+    if (driveLabel) driveLabel.textContent = 'Re-sync Now';
+  } else {
+    driveStatus.textContent = '';
+    driveStatus.className = 'menu-status';
+    if (driveLabel) driveLabel.textContent = 'Connect Google Drive';
+  }
+  const notifStatus = document.getElementById('notifStatus');
+  const notifItem = document.getElementById('notifMenuItem');
+  const notifLabel = notifItem ? notifItem.querySelector('.menu-label') : null;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    notifStatus.textContent = 'On';
+    notifStatus.className = 'menu-status on';
+    if (notifLabel) notifLabel.textContent = 'Reminders Enabled';
+  } else {
+    notifStatus.textContent = '';
+    notifStatus.className = 'menu-status';
+    if (notifLabel) notifLabel.textContent = 'Enable Reminders';
+  }
+}
+function updateBlockDayLabel() {
+  if (!currentDateKey) return;
+  const day = bookings[currentDateKey] || {};
+  const label = document.getElementById('blockDayLabel');
+  const status = document.getElementById('blockDayStatus');
+  if (day.blocked) {
+    label.textContent = 'Unblock this day';
+    status.textContent = 'Blocked';
+    status.className = 'menu-status on';
+  } else {
+    label.textContent = 'Block this day';
+    status.textContent = '';
+    status.className = 'menu-status';
+  }
+}
+
+// Click-outside-to-close for menus
+document.addEventListener('click', e => {
+  const mainMenu = document.getElementById('mainMenu');
+  const menuBtn = document.getElementById('menuBtn');
+  if (mainMenu && mainMenu.classList.contains('active') &&
+      !mainMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+    closeMainMenu();
+  }
+  const dayMenu = document.getElementById('dayMenu');
+  const dayMenuBtn = document.getElementById('dayMenuBtn');
+  if (dayMenu && dayMenu.classList.contains('active') &&
+      !dayMenu.contains(e.target) && !dayMenuBtn.contains(e.target)) {
+    closeDayMenu();
+  }
+});
+
+function renderCurrentView() {
+  if (currentView === 'month') showMonth(currentMonth);
+  else if (currentView === 'week') renderAgenda();
+  else renderGrid();
+}
+
+function renderAgenda() {
+  const body = document.getElementById('agendaBody');
+  const title = document.getElementById('agendaTitle');
+  const range = document.getElementById('agendaRange');
+  body.innerHTML = '';
+
+  const start = agendaAnchor;
+  const end = addDays(start, 6);
+  const today = new Date();
+  const todayStart = startOfWeek(today);
+
+  // Title: "This Week", "Next Week", "Last Week", or "Week of MMM D"
+  const weekDelta = Math.round((start - todayStart) / (7 * 86400000));
+  if (weekDelta === 0) title.textContent = 'This Week';
+  else if (weekDelta === 1) title.textContent = 'Next Week';
+  else if (weekDelta === -1) title.textContent = 'Last Week';
+  else title.textContent = `Week of ${formatDateShort(start)}`;
+
+  range.textContent = `${formatDateShort(start)} — ${formatDateShort(end)}, ${end.getFullYear()}`;
+
+  const todayKeyStr = todayKey();
+
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    const key = dateKeyFromDate(d);
+    const day = bookings[key] || { items: [], blocked: false };
+    const items = day.items || [];
+
+    const dayEl = document.createElement('div');
+    dayEl.className = 'agenda-day' + (key === todayKeyStr ? ' is-today' : '');
+    dayEl.onclick = () => openModal(key);
+
+    const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+
+    let shootsHTML = '';
+    if (day.blocked && items.length === 0) {
+      shootsHTML = `<div class="agenda-blocked-tag">Blocked / Unavailable</div>`;
+    } else if (items.length === 0) {
+      shootsHTML = `<div class="agenda-empty">No shoots scheduled</div>`;
+    } else {
+      if (day.blocked) {
+        shootsHTML += `<div class="agenda-blocked-tag" style="margin-bottom:4px">Blocked</div>`;
+      }
+      items.forEach(b => {
+        const color = TYPE_COLORS[b.type] || 'var(--pink-deep)';
+        const canceledCls = b.canceled ? ' canceled' : '';
+        shootsHTML += `
+          <div class="agenda-shoot${canceledCls}" style="border-left-color:${color}">
+            <div class="as-info">
+              <div class="as-name">${escapeHTML(b.name)}${b.canceled ? ' <span class="canceled-badge">Canceled</span>' : ''}</div>
+              <div class="as-meta">${escapeHTML(b.type)}${b.notes ? ' · ' + escapeHTML(b.notes) : ''}</div>
+            </div>
+            <div class="as-time">${escapeHTML(b.time)}</div>
+          </div>`;
+      });
+    }
+
+    dayEl.innerHTML = `
+      <div class="agenda-day-row">
+        <div class="agenda-day-date">
+          <div class="agenda-day-num">${d.getDate()}</div>
+          <div class="agenda-day-name">${dayName}</div>
+        </div>
+        <div class="agenda-day-shoots">${shootsHTML}</div>
+      </div>
+    `;
+    body.appendChild(dayEl);
+  }
+}
+
+function renderFullCalendar(monthIdx) {
+  const masterGrid = document.getElementById('calendarGridMaster');
+  // Wipe everything except the 8 header cells (spacer + 7 weekday labels)
+  while (masterGrid.children.length > 8) {
+    masterGrid.removeChild(masterGrid.lastChild);
+  }
+
+  const totalDays = daysInMonth(YEAR, monthIdx);
+  const firstDay = firstDayOfMonth(YEAR, monthIdx);
+  const today = todayKey();
+
+  const totalCells = firstDay + totalDays;
+  const totalRows = Math.ceil(totalCells / 7);
+
+  // Build row by row — each row is: 1 rail button + 7 day cells.
+  // Because they're in the same grid, the rail button auto-stretches
+  // to match the height of its row's tallest day cell.
+  for (let row = 0; row < totalRows; row++) {
+    // Compute Sunday-of-row date for the rail button
+    const firstDayOfRow = (row * 7) - firstDay + 1; // can be ≤0 in row 0
+    let sundayDate;
+    if (firstDayOfRow < 1) {
+      const prev = new Date(YEAR, monthIdx, 0);
+      sundayDate = new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + firstDayOfRow);
+    } else {
+      sundayDate = new Date(YEAR, monthIdx, firstDayOfRow);
+    }
+
+    // Rail button (column 1)
+    const railBtn = document.createElement('button');
+    railBtn.className = 'week-rail-btn';
+    railBtn.setAttribute('aria-label', `View week of ${formatDateShort(sundayDate)}`);
+    railBtn.title = `Week of ${formatDateShort(sundayDate)}`;
+    railBtn.innerHTML = `<span class="wk-num">${row + 1}</span><span>WK</span>`;
+    railBtn.onclick = (e) => {
+      e.stopPropagation();
+      agendaAnchor = startOfWeek(sundayDate);
+      showAgendaView();
+    };
+    masterGrid.appendChild(railBtn);
+
+    // 7 day cells (columns 2-8)
+    for (let col = 0; col < 7; col++) {
+      const cellPos = row * 7 + col;
+      const dayOfMonth = cellPos - firstDay + 1;
+
+      if (cellPos < firstDay || dayOfMonth > totalDays) {
+        // empty placeholder
+        const empty = document.createElement('div');
+        empty.className = 'full-day empty';
+        masterGrid.appendChild(empty);
+        continue;
+      }
+
+      const key = dateKey(YEAR, monthIdx, dayOfMonth);
+      const day = bookings[key] || { items: [], blocked: false };
+      const items = day.items || [];
+      const dayEl = document.createElement('div');
+      let cls = 'full-day';
+      if (items.length) cls += ' has-bookings';
+      if (day.blocked) cls += ' is-blocked';
+      if (key === today) cls += ' is-today';
+      if (items.some(b => b.reminder && !b.canceled)) cls += ' has-reminder';
+      dayEl.className = cls;
+      dayEl.onclick = () => openModal(key);
+
+      let pillsHTML = '';
+      if (day.blocked && items.length === 0) {
+        pillsHTML = `<div class="booking-pill blocked-pill">Blocked</div>`;
+      } else {
+        items.slice(0, 3).forEach(b => {
+          const color = TYPE_COLORS[b.type] || 'var(--navy)';
+          const cancelStyle = b.canceled
+            ? `background:transparent;color:${color};border:1px dashed ${color};text-decoration:line-through;`
+            : `background:${color}`;
+          pillsHTML += `<div class="booking-pill" style="${cancelStyle}">${escapeHTML(b.time || '')} ${escapeHTML(b.name || '')}</div>`;
+        });
+        if (items.length > 3) {
+          pillsHTML += `<div class="booking-pill" style="background:transparent;color:var(--navy);font-style:italic">+${items.length - 3} more</div>`;
+        }
+        if (day.blocked) {
+          pillsHTML = `<div class="booking-pill blocked-pill">Blocked</div>` + pillsHTML;
+        }
+      }
+
+      dayEl.innerHTML = `
+        <div class="day-number">${dayOfMonth}</div>
+        <div class="day-bookings">${pillsHTML}</div>
+      `;
+      masterGrid.appendChild(dayEl);
+    }
+  }
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(key) {
+  currentDateKey = key;
+  editingIndex = null;
+  expandedBookingIdx = null;
+  cancelingIdx = null;
+  const [y, m, d] = key.split('-').map(Number);
+  const dateObj = new Date(y, m-1, d);
+  document.getElementById('modalDate').textContent = formatDateLong(dateObj);
+  document.getElementById('formTitle').textContent = 'Add New Shoot';
+  document.getElementById('saveBtn').textContent = 'Save Booking';
+
+  // Banner state
+  const day = bookings[key] || {};
+  document.getElementById('blockedBanner').classList.toggle('active', !!day.blocked);
+
+  // Hide form by default
+  document.getElementById('formSection').classList.remove('active');
+  const addBtn = document.getElementById('addShootBtn');
+  addBtn.classList.remove('active');
+  addBtn.textContent = '+ Add Shoot';
+
+  // Close any open day menu
+  closeDayMenu();
+
+  clearForm();
+  renderBookings(key);
+  document.getElementById('modalBackdrop').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('active');
+  document.body.style.overflow = '';
+  closeDayMenu();
+  currentDateKey = null;
+  editingIndex = null;
+  expandedBookingIdx = null;
+  cancelingIdx = null;
+}
+
+async function toggleBlockDay() {
+  if (!currentDateKey) return;
+  if (!bookings[currentDateKey]) bookings[currentDateKey] = { items: [], blocked: false };
+  bookings[currentDateKey].blocked = !bookings[currentDateKey].blocked;
+  // Clean up empty entries
+  if (!bookings[currentDateKey].blocked &&
+      (!bookings[currentDateKey].items || bookings[currentDateKey].items.length === 0)) {
+    delete bookings[currentDateKey];
+  }
+  const isBlocked = bookings[currentDateKey]?.blocked || false;
+  document.getElementById('blockedBanner').classList.toggle('active', isBlocked);
+  await saveBookings();
+  if (currentView === 'month') renderFullCalendar(currentMonth);
+  if (currentView === 'week') renderAgenda();
+  showToast(isBlocked ? 'Day blocked' : 'Day available');
+}
+
+function renderBookings(key) {
+  const list = document.getElementById('bookingsList');
+  const day = bookings[key] || { items: [] };
+  const items = day.items || [];
+
+  if (items.length === 0) {
+    list.innerHTML = day.blocked
+      ? '<div class="no-bookings">This day is blocked off as personal/unavailable</div>'
+      : '<div class="no-bookings">No bookings yet for this day</div>';
+    return;
+  }
+
+  list.innerHTML = items.map((b, i) => {
+    const typeClass = TYPE_CLASS[b.type] || '';
+    const typeBg = TYPE_COLORS[b.type] || 'var(--navy)';
+    const expanded = expandedBookingIdx === i ? ' expanded' : '';
+    const canceled = b.canceled ? ' canceled' : '';
+
+    const phoneHTML = b.phone
+      ? `<div><span class="ico">☏</span><a href="tel:${escapeHTML(b.phone)}">${escapeHTML(b.phone)}</a></div>` : '';
+    const emailHTML = b.email
+      ? `<div><span class="ico">@</span><a href="mailto:${escapeHTML(b.email)}">${escapeHTML(b.email)}</a></div>` : '';
+    const contactBlock = (phoneHTML || emailHTML)
+      ? `<div class="booking-contact">${phoneHTML}${emailHTML}</div>` : '';
+
+    const reminderText = b.reminder ? reminderLabel(b.reminder) : '';
+    const reminderHTML = (reminderText && !b.canceled)
+      ? `<div class="booking-reminder">🔔 ${reminderText}</div>` : '';
+
+    const cancelBlock = b.canceled ? `
+      <div class="cancel-info">
+        <span class="lbl">Canceled${b.canceledAt ? ' on ' + new Date(b.canceledAt).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : ''}</span>
+        ${b.cancelReason ? escapeHTML(b.cancelReason) : 'No reason given'}
+      </div>` : '';
+
+    const showingCancelUI = cancelingIdx === i;
+
+    const actionsHTML = b.canceled
+      ? `<div class="booking-actions">
+          <button class="booking-action-btn uncancel" onclick="event.stopPropagation();uncancelBooking(${i})">Reinstate</button>
+          <button class="booking-action-btn delete" onclick="event.stopPropagation();deleteBooking(${i})">Delete Permanently</button>
+        </div>`
+      : showingCancelUI
+        ? `<div class="cancel-prompt">
+            <label class="cancel-prompt-label">Cancel ${escapeHTML(b.name)}'s ${escapeHTML(b.type.toLowerCase())} shoot — keep the record?</label>
+            <textarea id="cancelReasonInput" placeholder="Reason (optional) — e.g. client illness, weather, rescheduled to next month"></textarea>
+            <div class="cancel-prompt-actions">
+              <button class="booking-action-btn" onclick="event.stopPropagation();cancelBookingAbort()">Back</button>
+              <button class="booking-action-btn confirm" onclick="event.stopPropagation();cancelBookingConfirm(${i})">Confirm Cancel</button>
+            </div>
+          </div>`
+        : `<div class="booking-actions">
+            <button class="booking-action-btn" onclick="event.stopPropagation();editBooking(${i})">Edit</button>
+            <button class="booking-action-btn cancel" onclick="event.stopPropagation();cancelBookingPrompt(${i})">Cancel Shoot</button>
+            <button class="booking-action-btn delete" onclick="event.stopPropagation();deleteBooking(${i})">Delete</button>
+          </div>`;
+
+    return `
+      <div class="booking-item ${typeClass}${expanded}${canceled}">
+        <div class="booking-summary" onclick="toggleBookingExpand(${i})">
+          <div class="booking-summary-left">
+            <div class="booking-name">${escapeHTML(b.name)}</div>
+            <div class="booking-meta-row">
+              <span class="booking-time">${escapeHTML(b.time)}${b.duration ? ' · ' + escapeHTML(b.duration) : ''}</span>
+              <span class="booking-type" style="background:${typeBg}">${escapeHTML(b.type)}</span>
+              ${b.canceled ? '<span class="canceled-badge">Canceled</span>' : ''}
+            </div>
+          </div>
+          <div class="booking-summary-right">
+            <div class="booking-chevron"></div>
+          </div>
+        </div>
+        <div class="booking-detail">
+          <div class="booking-detail-inner">
+            ${cancelBlock}
+            ${contactBlock}
+            ${b.notes ? `<div class="booking-notes">${escapeHTML(b.notes)}</div>` : ''}
+            ${reminderHTML}
+            ${actionsHTML}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleBookingExpand(idx) {
+  if (expandedBookingIdx === idx) {
+    expandedBookingIdx = null;
+    cancelingIdx = null;
+  } else {
+    expandedBookingIdx = idx;
+    cancelingIdx = null; // collapse any open cancel UI when switching booking
+  }
+  renderBookings(currentDateKey);
+}
+
+function toggleAddForm() {
+  const form = document.getElementById('formSection');
+  const btn = document.getElementById('addShootBtn');
+  if (form.classList.contains('active')) {
+    form.classList.remove('active');
+    btn.classList.remove('active');
+    btn.textContent = '+ Add Shoot';
+    clearForm();
+    editingIndex = null;
+    document.getElementById('formTitle').textContent = 'Add New Shoot';
+    document.getElementById('saveBtn').textContent = 'Save Booking';
+  } else {
+    form.classList.add('active');
+    btn.classList.add('active');
+    btn.textContent = '× Hide Form';
+    setTimeout(() => form.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+  }
+}
+
+function reminderLabel(mins) {
+  const m = parseInt(mins);
+  if (m === 60) return '1 hour before';
+  if (m === 180) return '3 hours before';
+  if (m === 1440) return '1 day before';
+  if (m === 2880) return '2 days before';
+  if (m === 10080) return '1 week before';
+  return `${m} min before`;
+}
+
+function clearForm() {
+  document.getElementById('clientName').value = '';
+  document.getElementById('clientPhone').value = '';
+  document.getElementById('clientEmail').value = '';
+  document.getElementById('shootTime').value = '';
+  document.getElementById('shootDuration').value = '1 hour';
+  document.getElementById('shootType').value = 'Portrait';
+  document.getElementById('shootReminder').value = '1440';
+  document.getElementById('shootNotes').value = '';
+}
+
+async function saveBooking() {
+  const name = document.getElementById('clientName').value.trim();
+  const phone = document.getElementById('clientPhone').value.trim();
+  const email = document.getElementById('clientEmail').value.trim();
+  const time = document.getElementById('shootTime').value;
+  const duration = document.getElementById('shootDuration').value;
+  const type = document.getElementById('shootType').value;
+  const reminder = document.getElementById('shootReminder').value;
+  const notes = document.getElementById('shootNotes').value.trim();
+
+  if (!name) { showToast('Client name required', 'error'); return; }
+  if (!time) { showToast('Shoot time required', 'error'); return; }
+
+  const [h, mn] = time.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  const formattedTime = `${hour12}:${mn} ${ampm}`;
+
+  if (!bookings[currentDateKey]) bookings[currentDateKey] = { items: [], blocked: false };
+  if (!bookings[currentDateKey].items) bookings[currentDateKey].items = [];
+
+  const wasEdit = editingIndex !== null;
+  const booking = { name, phone, email, time: formattedTime, duration, type, reminder, notes };
+
+  if (wasEdit) {
+    // Preserve any cancellation metadata if somehow present (shouldn't be — we block edit on canceled)
+    const existing = bookings[currentDateKey].items[editingIndex];
+    bookings[currentDateKey].items[editingIndex] = { ...existing, ...booking };
+    editingIndex = null;
+  } else {
+    bookings[currentDateKey].items.push(booking);
+  }
+
+  // Sort by time
+  bookings[currentDateKey].items.sort((a, b) => {
+    const parseTime = t => {
+      const m = (t || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!m) return 0;
+      let hr = parseInt(m[1]); const mn = parseInt(m[2]);
+      if (m[3].toUpperCase() === 'PM' && hr !== 12) hr += 12;
+      if (m[3].toUpperCase() === 'AM' && hr === 12) hr = 0;
+      return hr * 60 + mn;
+    };
+    return parseTime(a.time) - parseTime(b.time);
+  });
+
+  // Hide form, reset
+  clearForm();
+  document.getElementById('formTitle').textContent = 'Add New Shoot';
+  document.getElementById('saveBtn').textContent = 'Save Booking';
+  document.getElementById('formSection').classList.remove('active');
+  const addBtn = document.getElementById('addShootBtn');
+  addBtn.classList.remove('active');
+  addBtn.textContent = '+ Add Shoot';
+
+  await saveBookings();
+  renderBookings(currentDateKey);
+  // Refresh whichever background view is active
+  if (currentView === 'month') renderFullCalendar(currentMonth);
+  if (currentView === 'week') renderAgenda();
+  scheduleAllReminders();
+  showToast(wasEdit ? 'Booking updated' : 'Booking saved');
+}
+
+function editBooking(idx) {
+  const b = bookings[currentDateKey].items[idx];
+  if (b.canceled) {
+    showToast('Reinstate first to edit', 'error');
+    return;
+  }
+  editingIndex = idx;
+  // Open the form section
+  const form = document.getElementById('formSection');
+  const addBtn = document.getElementById('addShootBtn');
+  form.classList.add('active');
+  addBtn.classList.add('active');
+  addBtn.textContent = '× Cancel Edit';
+
+  document.getElementById('clientName').value = b.name || '';
+  document.getElementById('clientPhone').value = b.phone || '';
+  document.getElementById('clientEmail').value = b.email || '';
+  const match = (b.time || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (match) {
+    let hr = parseInt(match[1]); const mn = match[2];
+    const ap = match[3].toUpperCase();
+    if (ap === 'PM' && hr !== 12) hr += 12;
+    if (ap === 'AM' && hr === 12) hr = 0;
+    document.getElementById('shootTime').value = `${String(hr).padStart(2,'0')}:${mn}`;
+  }
+  document.getElementById('shootDuration').value = b.duration || '1 hour';
+  document.getElementById('shootType').value = b.type || 'Portrait';
+  document.getElementById('shootReminder').value = b.reminder || '';
+  document.getElementById('shootNotes').value = b.notes || '';
+  document.getElementById('formTitle').textContent = 'Edit Shoot';
+  document.getElementById('saveBtn').textContent = 'Update Booking';
+  setTimeout(() => form.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+}
+
+function cancelBookingPrompt(idx) {
+  // Show inline cancel UI; confirmation happens in cancelBookingConfirm
+  cancelingIdx = idx;
+  expandedBookingIdx = idx; // ensure detail panel stays open
+  renderBookings(currentDateKey);
+  // Focus the textarea after render
+  setTimeout(() => {
+    const ta = document.getElementById('cancelReasonInput');
+    if (ta) ta.focus();
+  }, 50);
+}
+
+function cancelBookingAbort() {
+  cancelingIdx = null;
+  renderBookings(currentDateKey);
+}
+
+async function cancelBookingConfirm(idx) {
+  const reasonEl = document.getElementById('cancelReasonInput');
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+  const b = bookings[currentDateKey].items[idx];
+  bookings[currentDateKey].items[idx] = {
+    ...b,
+    canceled: true,
+    canceledAt: new Date().toISOString(),
+    cancelReason: reason
+  };
+  cancelingIdx = null;
+  await saveBookings();
+  expandedBookingIdx = idx;
+  renderBookings(currentDateKey);
+  if (currentView === 'month') renderFullCalendar(currentMonth);
+  if (currentView === 'week') renderAgenda();
+  scheduleAllReminders();
+  showToast('Shoot canceled — record kept');
+}
+
+async function uncancelBooking(idx) {
+  const b = bookings[currentDateKey].items[idx];
+  delete b.canceled;
+  delete b.canceledAt;
+  delete b.cancelReason;
+  await saveBookings();
+  renderBookings(currentDateKey);
+  if (currentView === 'month') renderFullCalendar(currentMonth);
+  if (currentView === 'week') renderAgenda();
+  scheduleAllReminders();
+  showToast('Shoot reinstated');
+}
+
+async function deleteBooking(idx) {
+  const b = bookings[currentDateKey].items[idx];
+  const msg = b.canceled
+    ? `Permanently delete the canceled record for ${b.name}? This cannot be undone.`
+    : `Delete ${b.name}'s booking? Tip: use "Cancel Shoot" instead if you want to keep the record.`;
+  if (!confirm(msg)) return;
+  bookings[currentDateKey].items.splice(idx, 1);
+  if (bookings[currentDateKey].items.length === 0 && !bookings[currentDateKey].blocked) {
+    delete bookings[currentDateKey];
+  }
+  expandedBookingIdx = null;
+  await saveBookings();
+  renderBookings(currentDateKey);
+  if (currentView === 'month') renderFullCalendar(currentMonth);
+  if (currentView === 'week') renderAgenda();
+  scheduleAllReminders();
+  showToast('Booking deleted');
+}
+
+/* ============================================================
+   PRINT VIEWS
+   Builds a clean print sheet from the current view and triggers print.
+   Print stylesheet hides everything else.
+   ============================================================ */
+function printCurrentDay() {
+  if (!currentDateKey) return;
+  printDay(currentDateKey);
+}
+
+function printCurrentView() {
+  if (currentView === 'reports') {
+    printReport(activeReportTab);
+    return;
+  }
+  if (currentView === 'week') {
+    buildPrintSheet('week', agendaAnchor, addDays(agendaAnchor, 6));
+  } else if (currentView === 'month') {
+    const start = new Date(YEAR, currentMonth, 1);
+    const end = new Date(YEAR, currentMonth, daysInMonth(YEAR, currentMonth));
+    buildPrintSheet('month', start, end);
+  } else {
+    // Year view: print full year roster
+    const start = new Date(YEAR, 0, 1);
+    const end = new Date(YEAR, 11, 31);
+    buildPrintSheet('year', start, end);
+  }
+  setTimeout(() => window.print(), 100);
+}
+
+function printDay(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const date = new Date(y, m-1, d);
+  buildPrintSheet('day', date, date);
+  setTimeout(() => window.print(), 100);
+}
+
+function buildPrintSheet(scope, startDate, endDate) {
+  const sheet = document.getElementById('printSheet');
+  let titleText = '';
+  if (scope === 'day') titleText = formatDateLong(startDate);
+  else if (scope === 'week') titleText = `Week of ${formatDateShort(startDate)}`;
+  else if (scope === 'month') titleText = startDate.toLocaleDateString('en-US', { month:'long', year:'numeric' });
+  else titleText = `${startDate.getFullYear()} Booking Roster`;
+
+  const rangeText = scope === 'day'
+    ? ''
+    : `${formatDateShort(startDate)} — ${formatDateShort(endDate)}, ${endDate.getFullYear()}`;
+
+  // Collect all days in range
+  let html = `
+    <div class="ps-masthead">
+      <div class="ps-brand">Moments<span class="by">by</span>Mia</div>
+      <div class="ps-title">${titleText}</div>
+      ${rangeText ? `<div class="ps-range">${rangeText}</div>` : ''}
+    </div>
+  `;
+
+  let totalActive = 0, totalCanceled = 0, totalBlocked = 0;
+
+  const cur = new Date(startDate);
+  while (cur <= endDate) {
+    const key = dateKeyFromDate(cur);
+    const day = bookings[key];
+    const items = (day && day.items) ? day.items : [];
+    const blocked = day && day.blocked;
+
+    // Skip empty days when printing month/year (would be too noisy)
+    const showEmptyDays = scope === 'day' || scope === 'week';
+    if (!items.length && !blocked && !showEmptyDays) {
+      cur.setDate(cur.getDate() + 1);
+      continue;
+    }
+
+    html += `<div class="ps-day">`;
+    html += `<div class="ps-day-header">${formatDateLong(cur)}</div>`;
+
+    if (blocked) {
+      html += `<div class="ps-blocked">— Blocked / Personal —</div>`;
+      totalBlocked++;
+    }
+
+    if (items.length === 0 && !blocked && showEmptyDays) {
+      html += `<div class="ps-empty">No shoots scheduled</div>`;
+    }
+
+    items.forEach(b => {
+      if (b.canceled) totalCanceled++;
+      else totalActive++;
+      const cancelCls = b.canceled ? ' canceled' : '';
+      html += `
+        <div class="ps-shoot${cancelCls}">
+          <div class="ps-shoot-row">
+            <div class="ps-name">${escapeHTML(b.name)}${b.canceled ? ' — CANCELED' : ''}</div>
+            <div class="ps-time">${escapeHTML(b.time || '')}${b.duration ? ' · ' + escapeHTML(b.duration) : ''}</div>
+          </div>
+          <div class="ps-detail">
+            <span class="lbl">Type</span>${escapeHTML(b.type)}
+            ${b.phone ? `<br><span class="lbl">Phone</span>${escapeHTML(b.phone)}` : ''}
+            ${b.email ? `<br><span class="lbl">Email</span>${escapeHTML(b.email)}` : ''}
+            ${b.notes ? `<br><span class="lbl">Notes</span>${escapeHTML(b.notes)}` : ''}
+            ${b.canceled && b.cancelReason ? `<br><span class="lbl">Reason</span>${escapeHTML(b.cancelReason)}` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  // Footer with totals
+  html += `<div class="ps-foot">`;
+  html += `${totalActive} ${totalActive === 1 ? 'shoot' : 'shoots'} booked`;
+  if (totalCanceled) html += ` · ${totalCanceled} canceled`;
+  if (totalBlocked) html += ` · ${totalBlocked} ${totalBlocked === 1 ? 'day' : 'days'} blocked`;
+  html += ` · Printed ${new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' })}`;
+  html += `</div>`;
+
+  sheet.innerHTML = html;
+}
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+let searchDebounce = null;
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(runSearch, 150);
+});
+searchInput.addEventListener('blur', () => {
+  setTimeout(() => searchResults.classList.remove('active'), 200);
+});
+searchInput.addEventListener('focus', () => {
+  if (searchInput.value.trim()) runSearch();
+});
+
+function runSearch() {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { searchResults.classList.remove('active'); return; }
+
+  const matches = [];
+  Object.keys(bookings).forEach(key => {
+    const day = bookings[key];
+    if (!day.items) return;
+    day.items.forEach((b, i) => {
+      const hay = [b.name, b.phone, b.email, b.notes, b.type].filter(Boolean).join(' ').toLowerCase();
+      if (hay.includes(q)) matches.push({ key, b, i });
+    });
+  });
+
+  matches.sort((a, b) => a.key.localeCompare(b.key));
+
+  if (!matches.length) {
+    searchResults.innerHTML = '<div class="search-empty">No matches found</div>';
+  } else {
+    searchResults.innerHTML = matches.slice(0, 30).map(({ key, b }) => {
+      const [y, m, d] = key.split('-').map(Number);
+      const dateObj = new Date(y, m-1, d);
+      const dateStr = dateObj.toLocaleDateString('en-US', {
+        weekday:'short', month:'short', day:'numeric', year:'numeric'
+      });
+      return `
+        <div class="search-result" onclick="jumpToBooking('${key}')" style="${b.canceled ? 'opacity:0.65;' : ''}">
+          <div class="sr-name">${escapeHTML(b.name)}${b.canceled ? ' <span class="canceled-badge">Canceled</span>' : ''}</div>
+          <div class="sr-meta">${escapeHTML(b.type)} · ${escapeHTML(b.time)}</div>
+          <div class="sr-detail">${dateStr}${b.notes ? ' · ' + escapeHTML(b.notes) : ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+  searchResults.classList.add('active');
+}
+
+function jumpToBooking(key) {
+  const [y, m] = key.split('-').map(Number);
+  YEAR = y;
+  document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+  searchInput.value = '';
+  searchResults.classList.remove('active');
+  showMonth(m - 1);
+  setTimeout(() => openModal(key), 250);
+}
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+let reportYear = new Date().getFullYear();
+let activeReportTab = 'summary';
+
+function showReportsView() {
+  currentView = 'reports';
+  document.getElementById('gridView').style.display = 'none';
+  document.getElementById('detailView').classList.remove('active');
+  document.getElementById('agendaView').classList.remove('active');
+  document.getElementById('reportsView').classList.add('active');
+  // Sync report year to current calendar year on first open
+  reportYear = YEAR;
+  updateReportYearDisplays();
+  renderActiveReport();
+  updateViewButtons();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateReportYearDisplays() {
+  const els = [document.getElementById('reportYearDisplay'),
+               document.getElementById('reportYearDisplay2')];
+  els.forEach(el => { if (el) el.textContent = reportYear; });
+}
+
+function changeReportYear(delta) {
+  reportYear += delta;
+  updateReportYearDisplays();
+  renderActiveReport();
+}
+
+function switchReportTab(tab) {
+  activeReportTab = tab;
+  document.querySelectorAll('.report-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+  if (tab === 'summary') document.getElementById('reportSummary').classList.add('active');
+  if (tab === 'upcoming') document.getElementById('reportUpcoming').classList.add('active');
+  if (tab === 'types') document.getElementById('reportTypes').classList.add('active');
+  renderActiveReport();
+}
+
+function renderActiveReport() {
+  if (activeReportTab === 'summary') renderSummaryReport();
+  if (activeReportTab === 'upcoming') renderUpcomingReport();
+  if (activeReportTab === 'types') renderTypesReport();
+}
+
+/* ----------------- DATA HELPERS ----------------- */
+// Returns flattened array of all bookings annotated with their date key
+function flattenBookings(filterFn) {
+  const out = [];
+  Object.keys(bookings).forEach(key => {
+    const day = bookings[key];
+    if (!day || !day.items) return;
+    day.items.forEach((b, i) => {
+      const item = { key, idx: i, ...b };
+      if (!filterFn || filterFn(item)) out.push(item);
+    });
+  });
+  return out;
+}
+
+function isInYear(item, year) {
+  return item.key.startsWith(String(year) + '-');
+}
+
+function bookingDateTime(item) {
+  const [y, m, d] = item.key.split('-').map(Number);
+  return parseTimeToDate(y, m, d, item.time);
+}
+
+function monthOfKey(key) {
+  return parseInt(key.split('-')[1], 10) - 1;
+}
+
+/* ----------------- YEAR SUMMARY ----------------- */
+function computeYearStats(year) {
+  const all = flattenBookings(b => isInYear(b, year));
+  const active = all.filter(b => !b.canceled);
+  const canceled = all.filter(b => b.canceled);
+  const now = new Date();
+
+  // For "completed" we treat: shoot date in the past AND not canceled
+  const completed = active.filter(b => bookingDateTime(b) < now);
+  const upcoming = active.filter(b => bookingDateTime(b) >= now);
+
+  // Monthly counts (active only, for the bar chart)
+  const monthly = Array(12).fill(0);
+  active.forEach(b => { monthly[monthOfKey(b.key)]++; });
+
+  // Type counts (active only)
+  const typeCounts = {};
+  active.forEach(b => {
+    const t = b.type || 'Other';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+
+  const cancelRate = all.length > 0 ? (canceled.length / all.length * 100) : 0;
+
+  // Days blocked
+  let blockedDays = 0;
+  Object.keys(bookings).forEach(key => {
+    if (key.startsWith(String(year) + '-') && bookings[key].blocked) blockedDays++;
+  });
+
+  return {
+    total: all.length,
+    active: active.length,
+    completed: completed.length,
+    upcoming: upcoming.length,
+    canceled: canceled.length,
+    cancelRate,
+    monthly,
+    typeCounts,
+    blockedDays
+  };
+}
+
+function renderSummaryReport() {
+  const container = document.getElementById('summaryContent');
+  const s = computeYearStats(reportYear);
+
+  if (s.total === 0) {
+    container.innerHTML = `
+      <div class="report-empty">No shoots recorded for ${reportYear}.<br>
+        <span style="font-size:13px;letter-spacing:0.15em;text-transform:uppercase;font-style:normal;color:var(--navy-soft);">
+        Start booking shoots and your reports will appear here.</span>
+      </div>`;
+    return;
+  }
+
+  const isPastYear = reportYear < new Date().getFullYear();
+
+  let html = `
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Scheduled</div>
+        <div class="stat-value">${s.total}</div>
+        <div class="stat-meta">all bookings, including canceled</div>
+      </div>
+      <div class="stat-card completed">
+        <div class="stat-label">Completed</div>
+        <div class="stat-value">${s.completed}</div>
+        <div class="stat-meta">past shoots, not canceled</div>
+      </div>
+      <div class="stat-card upcoming">
+        <div class="stat-label">${isPastYear ? 'Was Upcoming' : 'Upcoming'}</div>
+        <div class="stat-value">${s.upcoming}</div>
+        <div class="stat-meta">future shoots scheduled</div>
+      </div>
+      <div class="stat-card canceled">
+        <div class="stat-label">Canceled</div>
+        <div class="stat-value">${s.canceled}</div>
+        <div class="stat-meta">${s.cancelRate.toFixed(1)}% cancellation rate</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="report-h">Monthly Breakdown</div>
+        ${renderBarChart(s.monthly)}
+      </div>
+      <div class="chart-card">
+        <div class="report-h">Shoot Types</div>
+        ${renderDonut(s.typeCounts, s.active)}
+        ${renderTypeLegend(s.typeCounts, s.active, 6)}
+      </div>
+    </div>
+
+    ${s.blockedDays > 0 ? `
+      <div class="stat-card" style="max-width:300px;margin-top:8px">
+        <div class="stat-label">Personal Days Blocked</div>
+        <div class="stat-value" style="font-size:30px">${s.blockedDays}</div>
+        <div class="stat-meta">days marked unavailable in ${reportYear}</div>
+      </div>
+    ` : ''}
+  `;
+  container.innerHTML = html;
+}
+
+function renderBarChart(monthly) {
+  const max = Math.max(...monthly, 1);
+  const w = 100; // percentage units, viewBox-based
+  const monthAbbr = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const barWidth = w / 14; // 12 bars + 1 gap on each side
+  const chartHeight = 180;
+  const baseline = chartHeight - 30; // leave room for labels
+
+  let bars = '';
+  monthly.forEach((count, i) => {
+    const x = barWidth + i * barWidth + barWidth * 0.1;
+    const barW = barWidth * 0.8;
+    const h = count > 0 ? ((count / max) * (baseline - 20)) : 0;
+    const y = baseline - h;
+    const color = count > 0 ? 'var(--pink-deep)' : 'rgba(15, 29, 58, 0.08)';
+    bars += `<rect class="bar" x="${x}" y="${y}" width="${barW}" height="${Math.max(h, 1)}"
+                   fill="${color}" rx="1" />`;
+    if (count > 0) {
+      bars += `<text class="bar-value" x="${x + barW/2}" y="${y - 4}">${count}</text>`;
+    }
+    bars += `<text class="bar-label" x="${x + barW/2}" y="${baseline + 14}">${monthAbbr[i]}</text>`;
+  });
+  return `
+    <svg class="bar-chart" viewBox="0 0 ${w} ${chartHeight}" preserveAspectRatio="none">
+      <line class="axis-line" x1="0" y1="${baseline}" x2="${w}" y2="${baseline}"/>
+      ${bars}
+    </svg>`;
+}
+
+function renderDonut(typeCounts, total) {
+  if (total === 0) {
+    return '<div style="text-align:center;padding:30px;color:var(--navy-soft);font-style:italic;font-family:Cormorant Garamond,serif">No data</div>';
+  }
+  const entries = Object.entries(typeCounts).sort((a,b) => b[1] - a[1]);
+  const cx = 100, cy = 100, r = 70, innerR = 48;
+
+  // Edge case: only one type — render as full ring instead of an arc-from-self-to-self
+  if (entries.length === 1) {
+    const [type, count] = entries[0];
+    const color = TYPE_COLORS[type] || 'var(--navy)';
+    return `
+      <svg class="donut-chart" viewBox="0 0 200 200">
+        <circle cx="${cx}" cy="${cy}" r="${(r + innerR) / 2}"
+                fill="none" stroke="${color}" stroke-width="${r - innerR}">
+          <title>${type}: ${count} (100%)</title>
+        </circle>
+        <g class="donut-center">
+          <text class="total" x="100" y="100" text-anchor="middle" dominant-baseline="central">${total}</text>
+          <text class="label" x="100" y="124" text-anchor="middle">${total === 1 ? 'shoot' : 'shoots'}</text>
+        </g>
+      </svg>`;
+  }
+
+  let cumPct = 0;
+  let segments = '';
+  entries.forEach(([type, count]) => {
+    const pct = count / total;
+    const startAngle = cumPct * 2 * Math.PI - Math.PI / 2;
+    const endAngle = (cumPct + pct) * 2 * Math.PI - Math.PI / 2;
+    cumPct += pct;
+    const largeArc = pct > 0.5 ? 1 : 0;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const x3 = cx + innerR * Math.cos(endAngle);
+    const y3 = cy + innerR * Math.sin(endAngle);
+    const x4 = cx + innerR * Math.cos(startAngle);
+    const y4 = cy + innerR * Math.sin(startAngle);
+    const color = TYPE_COLORS[type] || 'var(--navy)';
+    const path = `M${x1} ${y1} A${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}
+                  L${x3} ${y3} A${innerR} ${innerR} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+    segments += `<path d="${path}" fill="${color}" stroke="white" stroke-width="1">
+                   <title>${type}: ${count} (${(pct*100).toFixed(1)}%)</title>
+                 </path>`;
+  });
+  return `
+    <svg class="donut-chart" viewBox="0 0 200 200">
+      ${segments}
+      <g class="donut-center">
+        <text class="total" x="100" y="100" text-anchor="middle" dominant-baseline="central">${total}</text>
+        <text class="label" x="100" y="124" text-anchor="middle">${total === 1 ? 'shoot' : 'shoots'}</text>
+      </g>
+    </svg>`;
+}
+
+function renderTypeLegend(typeCounts, total, limit) {
+  if (total === 0) return '';
+  const entries = Object.entries(typeCounts).sort((a,b) => b[1] - a[1]);
+  const visible = limit ? entries.slice(0, limit) : entries;
+  const remaining = limit && entries.length > limit
+    ? entries.slice(limit).reduce((sum, [_, c]) => sum + c, 0)
+    : 0;
+  let html = '<div class="type-legend">';
+  visible.forEach(([type, count]) => {
+    const pct = total > 0 ? (count / total * 100).toFixed(1) : '0';
+    const color = TYPE_COLORS[type] || 'var(--navy)';
+    html += `
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:${color}"></span>
+        <span class="legend-name">${escapeHTML(type)}</span>
+        <span class="legend-count">${count}</span>
+        <span class="legend-pct">${pct}%</span>
+      </div>`;
+  });
+  if (remaining > 0) {
+    const remPct = (remaining / total * 100).toFixed(1);
+    html += `
+      <div class="legend-row" style="opacity:0.7">
+        <span class="legend-swatch" style="background:var(--type-other)"></span>
+        <span class="legend-name" style="font-style:italic">+ ${entries.length - limit} other types</span>
+        <span class="legend-count">${remaining}</span>
+        <span class="legend-pct">${remPct}%</span>
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ----------------- UPCOMING ----------------- */
+function renderUpcomingReport() {
+  const container = document.getElementById('upcomingContent');
+  const now = new Date();
+  const in7 = new Date(now.getTime() + 7 * 86400000);
+  const in30 = new Date(now.getTime() + 30 * 86400000);
+
+  const all = flattenBookings(b => !b.canceled).filter(b => bookingDateTime(b) >= now);
+  all.sort((a, b) => bookingDateTime(a) - bookingDateTime(b));
+
+  const next7 = all.filter(b => bookingDateTime(b) <= in7);
+  const next30 = all.filter(b => bookingDateTime(b) <= in30);
+
+  // Data hygiene check: shoots in next 7 days missing phone & email
+  const missingContact = next7.filter(b => !b.phone && !b.email);
+
+  let html = `
+    <div class="stat-grid">
+      <div class="stat-card upcoming">
+        <div class="stat-label">Next 7 Days</div>
+        <div class="stat-value">${next7.length}</div>
+        <div class="stat-meta">${next7.length === 1 ? 'shoot' : 'shoots'} this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Next 30 Days</div>
+        <div class="stat-value">${next30.length}</div>
+        <div class="stat-meta">${next30.length === 1 ? 'shoot' : 'shoots'} this month</div>
+      </div>
+      <div class="stat-card completed">
+        <div class="stat-label">All Upcoming</div>
+        <div class="stat-value">${all.length}</div>
+        <div class="stat-meta">on the books, future</div>
+      </div>
+      ${missingContact.length > 0 ? `
+        <div class="stat-card warning">
+          <div class="stat-label">Missing Contact</div>
+          <div class="stat-value">${missingContact.length}</div>
+          <div class="stat-meta">no phone or email · this week</div>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="report-h">Next 30 Days</div>
+  `;
+
+  if (next30.length === 0) {
+    html += '<div class="report-empty">Nothing scheduled in the next 30 days.</div>';
+  } else {
+    // Group by day
+    const byDay = {};
+    next30.forEach(b => {
+      if (!byDay[b.key]) byDay[b.key] = [];
+      byDay[b.key].push(b);
+    });
+    Object.keys(byDay).sort().forEach(key => {
+      const [y, m, d] = key.split('-').map(Number);
+      const dateObj = new Date(y, m-1, d);
+      const dayHeader = formatDateLong(dateObj);
+      html += `<div class="upcoming-day">
+        <div class="upcoming-day-header">${dayHeader}</div>`;
+      byDay[key].forEach(b => {
+        const flag = (!b.phone && !b.email)
+          ? '<span class="hygiene-flag">No Contact</span>' : '';
+        html += `
+          <div class="upcoming-shoot" onclick="jumpToBooking('${b.key}')">
+            <div class="upcoming-shoot-info">
+              <div class="upcoming-shoot-name">${escapeHTML(b.name)}${flag}</div>
+              <div class="upcoming-shoot-meta">${escapeHTML(b.type)}${b.duration ? ' · ' + escapeHTML(b.duration) : ''}${b.notes ? ' · ' + escapeHTML(b.notes) : ''}</div>
+            </div>
+            <div class="upcoming-shoot-time">${escapeHTML(b.time)}</div>
+          </div>`;
+      });
+      html += '</div>';
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+/* ----------------- TYPES ----------------- */
+function renderTypesReport() {
+  const container = document.getElementById('typesContent');
+  const all = flattenBookings(b => isInYear(b, reportYear) && !b.canceled);
+
+  if (all.length === 0) {
+    container.innerHTML = `<div class="report-empty">No completed or scheduled shoots in ${reportYear}.</div>`;
+    return;
+  }
+
+  // Aggregate per type
+  const byType = {};
+  all.forEach(b => {
+    const t = b.type || 'Other';
+    if (!byType[t]) byType[t] = { count: 0, totalMinutes: 0 };
+    byType[t].count++;
+    byType[t].totalMinutes += parseDuration(b.duration);
+  });
+
+  const total = all.length;
+  const entries = Object.entries(byType).sort((a,b) => b[1].count - a[1].count);
+
+  let tableRows = '';
+  entries.forEach(([type, stats]) => {
+    const color = TYPE_COLORS[type] || 'var(--navy)';
+    const pct = (stats.count / total * 100).toFixed(1);
+    const avgMin = Math.round(stats.totalMinutes / stats.count);
+    const avgLabel = avgMin >= 60
+      ? `${(avgMin / 60).toFixed(1)} hr`
+      : `${avgMin} min`;
+    tableRows += `
+      <tr>
+        <td>
+          <span class="swatch" style="background:${color}"></span>
+          <span class="name">${escapeHTML(type)}</span>
+        </td>
+        <td class="num">${stats.count}</td>
+        <td class="num">${pct}%</td>
+        <td class="num">${avgLabel}</td>
+      </tr>`;
+  });
+
+  container.innerHTML = `
+    <div class="chart-grid" style="grid-template-columns: 280px 1fr; align-items:start;">
+      <div class="chart-card">
+        ${renderDonut(
+          Object.fromEntries(entries.map(([t, s]) => [t, s.count])),
+          total
+        )}
+        <div style="text-align:center;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--navy-soft);margin-top:14px;font-weight:500">
+          ${reportYear} · all shoots
+        </div>
+      </div>
+      <div>
+        <div class="report-h">Type Breakdown</div>
+        <table class="type-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th class="num">Count</th>
+              <th class="num">% of Total</th>
+              <th class="num">Avg Length</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ----------------- PRINT ----------------- */
+function printReport(which) {
+  const sheet = document.getElementById('printSheet');
+  let title = '', body = '';
+
+  if (which === 'summary') {
+    const s = computeYearStats(reportYear);
+    title = `${reportYear} Year Summary`;
+    body = `
+      <div class="ps-stats">
+        <div><span class="ps-stat-label">Total Scheduled:</span> <strong>${s.total}</strong></div>
+        <div><span class="ps-stat-label">Completed:</span> <strong>${s.completed}</strong></div>
+        <div><span class="ps-stat-label">Upcoming:</span> <strong>${s.upcoming}</strong></div>
+        <div><span class="ps-stat-label">Canceled:</span> <strong>${s.canceled} (${s.cancelRate.toFixed(1)}%)</strong></div>
+        ${s.blockedDays > 0 ? `<div><span class="ps-stat-label">Personal Days Blocked:</span> <strong>${s.blockedDays}</strong></div>` : ''}
+      </div>
+      <h3 class="ps-section-h">Monthly Breakdown</h3>
+      <table class="ps-table">
+        <tbody>${
+          ['January','February','March','April','May','June','July','August','September','October','November','December']
+          .map((m, i) => `<tr><td>${m}</td><td class="num">${s.monthly[i]}</td></tr>`).join('')
+        }</tbody>
+      </table>
+      <h3 class="ps-section-h">Shoot Types</h3>
+      <table class="ps-table">
+        <tbody>${
+          Object.entries(s.typeCounts).sort((a,b) => b[1] - a[1])
+            .map(([t, c]) => `<tr><td>${escapeHTML(t)}</td><td class="num">${c}</td><td class="num">${(c/s.active*100).toFixed(1)}%</td></tr>`).join('')
+        }</tbody>
+      </table>`;
+  } else if (which === 'upcoming') {
+    const now = new Date();
+    const in30 = new Date(now.getTime() + 30 * 86400000);
+    const all = flattenBookings(b => !b.canceled).filter(b => {
+      const dt = bookingDateTime(b);
+      return dt >= now && dt <= in30;
+    });
+    all.sort((a,b) => bookingDateTime(a) - bookingDateTime(b));
+    title = 'Upcoming Shoots — Next 30 Days';
+    if (all.length === 0) {
+      body = '<div class="ps-empty">Nothing scheduled.</div>';
+    } else {
+      const byDay = {};
+      all.forEach(b => { (byDay[b.key] = byDay[b.key] || []).push(b); });
+      body = Object.keys(byDay).sort().map(key => {
+        const [y,m,d] = key.split('-').map(Number);
+        const dateObj = new Date(y,m-1,d);
+        const items = byDay[key].map(b => `
+          <div class="ps-shoot">
+            <div class="ps-shoot-row">
+              <div class="ps-name">${escapeHTML(b.name)}</div>
+              <div class="ps-time">${escapeHTML(b.time)}${b.duration ? ' · ' + escapeHTML(b.duration) : ''}</div>
+            </div>
+            <div class="ps-detail">
+              <span class="lbl">Type</span>${escapeHTML(b.type)}
+              ${b.phone ? `<br><span class="lbl">Phone</span>${escapeHTML(b.phone)}` : ''}
+              ${b.email ? `<br><span class="lbl">Email</span>${escapeHTML(b.email)}` : ''}
+              ${b.notes ? `<br><span class="lbl">Notes</span>${escapeHTML(b.notes)}` : ''}
+            </div>
+          </div>`).join('');
+        return `<div class="ps-day">
+          <div class="ps-day-header">${formatDateLong(dateObj)}</div>${items}</div>`;
+      }).join('');
+    }
+  } else if (which === 'types') {
+    const all = flattenBookings(b => isInYear(b, reportYear) && !b.canceled);
+    title = `${reportYear} Shoot Types`;
+    if (all.length === 0) {
+      body = `<div class="ps-empty">No data for ${reportYear}.</div>`;
+    } else {
+      const byType = {};
+      all.forEach(b => {
+        const t = b.type || 'Other';
+        if (!byType[t]) byType[t] = { count: 0, totalMinutes: 0 };
+        byType[t].count++;
+        byType[t].totalMinutes += parseDuration(b.duration);
+      });
+      const total = all.length;
+      const rows = Object.entries(byType).sort((a,b) => b[1].count - a[1].count)
+        .map(([type, stats]) => {
+          const pct = (stats.count / total * 100).toFixed(1);
+          const avgMin = Math.round(stats.totalMinutes / stats.count);
+          const avgLabel = avgMin >= 60 ? `${(avgMin/60).toFixed(1)} hr` : `${avgMin} min`;
+          return `<tr><td>${escapeHTML(type)}</td><td class="num">${stats.count}</td><td class="num">${pct}%</td><td class="num">${avgLabel}</td></tr>`;
+        }).join('');
+      body = `
+        <table class="ps-table">
+          <thead><tr><th>Type</th><th class="num">Count</th><th class="num">% of Total</th><th class="num">Avg Length</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:16px;font-size:11px;color:var(--navy-soft)">Total active shoots: ${total}</div>`;
+    }
+  }
+
+  sheet.innerHTML = `
+    <div class="ps-masthead">
+      <div class="ps-brand">Moments<span class="by">by</span>Mia</div>
+      <div class="ps-title">${title}</div>
+    </div>
+    ${body}
+    <div class="ps-foot">Printed ${new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' })}</div>
+  `;
+  setTimeout(() => window.print(), 100);
+}
+
+
+/* ============================================================
+   SWIPE NAVIGATION (mobile)
+   ============================================================ */
+let touchStartX = 0, touchStartY = 0;
+function attachSwipe(el, callback) {
+  el.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 80 && Math.abs(dy) < 60) {
+      callback(dx < 0 ? 1 : -1);
+    }
+  }, { passive: true });
+}
+attachSwipe(document.getElementById('detailView'), navigateMonth);
+attachSwipe(document.getElementById('agendaView'), navigateAgenda);
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.getElementById('modalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'modalBackdrop') closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (document.getElementById('modalBackdrop').classList.contains('active')) return;
+  if (currentView === 'month') {
+    if (e.key === 'ArrowLeft') navigateMonth(-1);
+    if (e.key === 'ArrowRight') navigateMonth(1);
+  } else if (currentView === 'week') {
+    if (e.key === 'ArrowLeft') navigateAgenda(-1);
+    if (e.key === 'ArrowRight') navigateAgenda(1);
+  }
+});
+
+(async function init() {
+  document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
+  await loadBookings();
+
+  // If signed in, attempt cloud-first restore (cloud wins on first load only if local empty)
+  if (driveToken && Object.keys(bookings).length === 0) {
+    if (!driveFileId) await findDriveFile().catch(() => {});
+    if (driveFileId) await restoreFromDrive();
+  }
+
+  renderGrid();
+  updateViewButtons();
+  updateSyncPill();
+  scheduleAllReminders();
+
+  // Re-schedule reminders every hour to cover the rolling 24h window
+  setInterval(scheduleAllReminders, 60 * 60 * 1000);
+
+  // Show notification button state
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const notifEl = document.getElementById('notifBtn');
+    if (notifEl) notifEl.textContent = '🔔 Reminders On';
+  }
+
+  // Sync menu status labels with current state (drive token, notification permission)
+  updateMenuStatuses();
+})();
+</script>
+
+</body>
+</html>

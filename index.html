@@ -265,6 +265,7 @@ body {
 .sync-pill.syncing { color: var(--gold); }
 .sync-pill.synced { color: var(--navy-soft); }
 .sync-pill.error { color: var(--pink-deep); }
+.sync-pill.updated { color: var(--gold); font-weight: 500; }
 .sync-pill .dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
@@ -1857,6 +1858,11 @@ let editingIndex = null;
 let driveToken = null;
 let driveFileId = null;
 let saveDebounce = null;
+// Sync state for auto-refresh
+let lastSyncedAt = null;        // ISO timestamp of the Drive copy we last read
+let syncInProgress = false;      // lock to prevent overlapping sync ops
+let pendingSave = false;         // queued save while sync is running
+let pollTimer = null;            // setInterval handle for background polling
 let currentView = 'year'; // 'year' | 'month' | 'week'
 let agendaAnchor = startOfWeek(new Date()); // Sunday of the week being viewed
 let expandedBookingIdx = null; // which booking is expanded in the modal
@@ -1865,6 +1871,7 @@ let cancelingIdx = null; // which booking is showing the inline cancel prompt
 const STORAGE_KEY = 'mbm_calendar_v2';
 const DRIVE_TOKEN_KEY = 'mbm_drive_token';
 const DRIVE_FILE_KEY = 'mbm_drive_file_id';
+const LAST_SYNCED_KEY = 'mbm_last_synced_at';
 
 /* ============================================================
    PERSISTENCE — IndexedDB primary, localStorage fallback
@@ -1930,6 +1937,7 @@ async function loadBookings() {
       }
     }
     driveFileId = localStorage.getItem(DRIVE_FILE_KEY);
+    lastSyncedAt = localStorage.getItem(LAST_SYNCED_KEY);
   } catch(e) {}
 }
 
@@ -1952,10 +1960,20 @@ async function saveBookings({ syncToCloud = true } = {}) {
 function updateSyncPill(state) {
   const pill = document.getElementById('syncPill');
   const text = document.getElementById('syncText');
-  pill.classList.remove('syncing', 'synced', 'error');
+  pill.classList.remove('syncing', 'synced', 'error', 'updated');
   if (state === 'syncing') {
     pill.classList.add('syncing');
     text.textContent = 'Syncing to Drive…';
+  } else if (state === 'checking') {
+    pill.classList.add('syncing');
+    text.textContent = 'Checking for updates…';
+  } else if (state === 'updated') {
+    pill.classList.add('updated');
+    text.textContent = 'Latest changes loaded';
+    // Auto-revert to 'synced' state after 2.5s
+    setTimeout(() => {
+      if (pill.classList.contains('updated')) updateSyncPill();
+    }, 2500);
   } else if (state === 'error') {
     pill.classList.add('error');
     text.textContent = 'Sync failed — saved locally';
@@ -2023,7 +2041,17 @@ async function connectGoogleDrive() {
         const expiresAt = Date.now() + (resp.expires_in - 60) * 1000;
         localStorage.setItem(DRIVE_TOKEN_KEY, JSON.stringify({ token: driveToken, expiresAt }));
         showToast('Connected to Google Drive');
+        // First-time connect: try to pull existing data from Drive (merging
+        // with any local data already entered), then push the merged state up
+        try {
+          await findDriveFile();
+          if (driveFileId) {
+            await pullFromDrive();
+            renderCurrentView();
+          }
+        } catch(e) { /* tolerate missing file */ }
         await syncToDrive();
+        startPolling();
         updateSyncPill();
       }
     });
@@ -2035,7 +2063,7 @@ async function connectGoogleDrive() {
 
 async function findDriveFile() {
   const r = await fetch(
-    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILENAME}'&fields=files(id,name)`,
+    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILENAME}'&fields=files(id,name,modifiedTime)`,
     { headers: { Authorization: `Bearer ${driveToken}` } }
   );
   if (!r.ok) throw new Error('Drive list failed');
@@ -2043,18 +2071,158 @@ async function findDriveFile() {
   if (data.files && data.files.length) {
     driveFileId = data.files[0].id;
     localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
+    return { id: driveFileId, modifiedTime: data.files[0].modifiedTime };
   }
-  return driveFileId;
+  return null;
 }
 
+// Cheap call: just get the metadata (modifiedTime), not the file contents
+async function getDriveFileMeta() {
+  if (!driveToken) return null;
+  if (!driveFileId) {
+    const meta = await findDriveFile();
+    return meta;
+  }
+  const r = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=id,modifiedTime`,
+    { headers: { Authorization: `Bearer ${driveToken}` } }
+  );
+  if (!r.ok) {
+    if (r.status === 404) {
+      // File was deleted on Drive — clear our reference and look again
+      driveFileId = null;
+      localStorage.removeItem(DRIVE_FILE_KEY);
+      return await findDriveFile();
+    }
+    throw new Error('Drive metadata fetch failed');
+  }
+  return await r.json();
+}
+
+// Download the full Drive payload
+async function downloadDrivePayload() {
+  if (!driveToken || !driveFileId) return null;
+  const r = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
+    { headers: { Authorization: `Bearer ${driveToken}` } }
+  );
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+// Merge two booking sets using per-item updatedAt timestamps.
+// Rules:
+//   - If a date key exists only on one side → take it
+//   - If a date key exists on both, merge items by name+time (a stable identity)
+//     - same identity, both sides → newer updatedAt wins
+//     - identity only on one side → keep
+//   - blocked flag: most recent wins; if no timestamp on one side, that side loses
+function mergeBookings(local, remote) {
+  const merged = {};
+  const allKeys = new Set([...Object.keys(local || {}), ...Object.keys(remote || {})]);
+
+  allKeys.forEach(key => {
+    const l = local && local[key];
+    const r = remote && remote[key];
+    if (!l) { merged[key] = r; return; }
+    if (!r) { merged[key] = l; return; }
+
+    // Both sides have this date. Merge items by identity (name|time).
+    const itemMap = new Map();
+    const idOf = b => `${(b.name || '').toLowerCase().trim()}|${b.time || ''}`;
+
+    (l.items || []).forEach(b => itemMap.set(idOf(b), { source: 'local', booking: b }));
+    (r.items || []).forEach(b => {
+      const id = idOf(b);
+      const existing = itemMap.get(id);
+      if (!existing) {
+        itemMap.set(id, { source: 'remote', booking: b });
+      } else {
+        // Conflict — newer wins
+        const lU = existing.booking.updatedAt || '';
+        const rU = b.updatedAt || '';
+        if (rU > lU) itemMap.set(id, { source: 'remote', booking: b });
+      }
+    });
+
+    const items = Array.from(itemMap.values()).map(x => x.booking);
+    // Sort by time
+    items.sort((a, b) => {
+      const parseT = t => {
+        const m = (t || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+        if (!m) return 0;
+        let hr = parseInt(m[1]); const mn = parseInt(m[2]);
+        if (m[3].toUpperCase() === 'PM' && hr !== 12) hr += 12;
+        if (m[3].toUpperCase() === 'AM' && hr === 12) hr = 0;
+        return hr * 60 + mn;
+      };
+      return parseT(a.time) - parseT(b.time);
+    });
+
+    // For blocked flag: prefer the side with the more recent change overall
+    // (heuristic: max updatedAt of items on each side)
+    const lMax = (l.items || []).reduce((m, b) => Math.max(m, Date.parse(b.updatedAt || 0) || 0), 0);
+    const rMax = (r.items || []).reduce((m, b) => Math.max(m, Date.parse(b.updatedAt || 0) || 0), 0);
+    const blocked = rMax > lMax ? !!r.blocked : !!l.blocked;
+
+    if (items.length === 0 && !blocked) return; // nothing to keep
+    merged[key] = { items, blocked };
+  });
+
+  return merged;
+}
+
+// Pull from Drive and merge into local. Returns true if local data changed.
+async function pullFromDrive() {
+  if (!driveToken) return false;
+  if (!driveFileId) {
+    const meta = await findDriveFile();
+    if (!meta) return false;
+  }
+  const payload = await downloadDrivePayload();
+  if (!payload || !payload.bookings) return false;
+
+  const remoteBookings = payload.bookings;
+  const localSnapshot = JSON.stringify(bookings);
+  const merged = mergeBookings(bookings, remoteBookings);
+  const mergedSnapshot = JSON.stringify(merged);
+
+  bookings = merged;
+  lastSyncedAt = payload.lastModified || new Date().toISOString();
+  localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
+  await saveBookings({ syncToCloud: false }); // persist locally without re-syncing
+
+  return localSnapshot !== mergedSnapshot;
+}
+
+// Backwards-compatible alias used by older code paths
+async function restoreFromDrive() {
+  return await pullFromDrive();
+}
+
+// The main upload — pulls first if Drive has changed since we last synced,
+// then writes our (possibly merged) state up.
 async function syncToDrive() {
   if (!driveToken) return;
+  if (syncInProgress) { pendingSave = true; return; }
+  syncInProgress = true;
   updateSyncPill('syncing');
+
   try {
-    if (!driveFileId) await findDriveFile();
+    // Conflict detection: if Drive has been modified since our last known sync,
+    // pull and merge first so we don't overwrite remote changes
+    let meta = null;
+    try { meta = await getDriveFileMeta(); } catch(e) { /* tolerate transient error */ }
+
+    if (meta && meta.modifiedTime && lastSyncedAt && meta.modifiedTime > lastSyncedAt) {
+      // Remote has newer data than we last saw — pull and merge before pushing
+      await pullFromDrive();
+    }
+
+    const lastModified = new Date().toISOString();
     const payload = JSON.stringify({
       version: 2,
-      lastModified: new Date().toISOString(),
+      lastModified,
       bookings
     }, null, 2);
     const metadata = { name: DRIVE_FILENAME, parents: ['appDataFolder'] };
@@ -2081,30 +2249,76 @@ async function syncToDrive() {
       driveFileId = data.id;
       localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
     }
+    lastSyncedAt = lastModified;
+    localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
     updateSyncPill();
   } catch(e) {
     console.warn('Drive sync error', e);
     updateSyncPill('error');
+  } finally {
+    syncInProgress = false;
+    if (pendingSave) {
+      pendingSave = false;
+      // Schedule a follow-up save shortly
+      setTimeout(() => saveBookings(), 100);
+    }
   }
 }
 
-async function restoreFromDrive() {
-  if (!driveToken || !driveFileId) return false;
+// Check Drive for updates; pull if newer. Used by load + polling.
+// Returns true if something changed.
+async function checkForUpdates({ silent = false } = {}) {
+  if (!driveToken) return false;
+  if (syncInProgress) return false; // skip; another op already running
+  syncInProgress = true;
+  if (!silent) updateSyncPill('checking');
   try {
-    const r = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
-      { headers: { Authorization: `Bearer ${driveToken}` } }
-    );
-    if (!r.ok) return false;
-    const data = await r.json();
-    if (data.bookings) {
-      bookings = data.bookings;
-      await saveBookings({ syncToCloud: false });
-      return true;
+    const meta = await getDriveFileMeta();
+    if (!meta || !meta.modifiedTime) {
+      if (!silent) updateSyncPill();
+      return false;
     }
-  } catch(e) {}
-  return false;
+    // If Drive's timestamp is newer than what we last pulled, fetch and merge
+    if (!lastSyncedAt || meta.modifiedTime > lastSyncedAt) {
+      const changed = await pullFromDrive();
+      updateSyncPill(changed ? 'updated' : 'synced');
+      if (changed) {
+        // Re-render whatever view is open so user sees fresh data
+        renderCurrentView();
+        if (currentDateKey) renderBookings(currentDateKey);
+        scheduleAllReminders();
+      }
+      return changed;
+    }
+    if (!silent) updateSyncPill();
+    return false;
+  } catch(e) {
+    console.warn('Drive update check error', e);
+    if (!silent) updateSyncPill('error');
+    return false;
+  } finally {
+    syncInProgress = false;
+  }
 }
+
+// Background polling — every 60s while the tab is visible
+function startPolling() {
+  stopPolling();
+  if (!driveToken) return;
+  pollTimer = setInterval(() => {
+    if (!document.hidden) checkForUpdates({ silent: true });
+  }, 60000);
+}
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+// When tab regains focus, do an immediate check
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && driveToken) {
+    checkForUpdates({ silent: true });
+  }
+});
 
 /* ============================================================
    IMPORT / EXPORT
@@ -2965,7 +3179,10 @@ async function saveBooking() {
   if (!bookings[currentDateKey].items) bookings[currentDateKey].items = [];
 
   const wasEdit = editingIndex !== null;
-  const booking = { name, phone, email, time: formattedTime, duration, type, reminder, notes };
+  const booking = {
+    name, phone, email, time: formattedTime, duration, type, reminder, notes,
+    updatedAt: new Date().toISOString()
+  };
 
   if (wasEdit) {
     // Preserve any cancellation metadata if somehow present (shouldn't be — we block edit on canceled)
@@ -3066,7 +3283,8 @@ async function cancelBookingConfirm(idx) {
     ...b,
     canceled: true,
     canceledAt: new Date().toISOString(),
-    cancelReason: reason
+    cancelReason: reason,
+    updatedAt: new Date().toISOString()
   };
   cancelingIdx = null;
   await saveBookings();
@@ -3083,6 +3301,7 @@ async function uncancelBooking(idx) {
   delete b.canceled;
   delete b.canceledAt;
   delete b.cancelReason;
+  b.updatedAt = new Date().toISOString();
   await saveBookings();
   renderBookings(currentDateKey);
   if (currentView === 'month') renderFullCalendar(currentMonth);
@@ -3892,10 +4111,14 @@ document.addEventListener('keydown', e => {
   document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
   await loadBookings();
 
-  // If signed in, attempt cloud-first restore (cloud wins on first load only if local empty)
-  if (driveToken && Object.keys(bookings).length === 0) {
-    if (!driveFileId) await findDriveFile().catch(() => {});
-    if (driveFileId) await restoreFromDrive();
+  // If signed in to Drive, ALWAYS check for updates on load (not just when local empty).
+  // pullFromDrive() does an intelligent merge so local edits are preserved.
+  if (driveToken) {
+    try {
+      if (!driveFileId) await findDriveFile();
+      if (driveFileId) await pullFromDrive();
+    } catch(e) { console.warn('Initial Drive sync failed', e); }
+    startPolling();
   }
 
   renderGrid();

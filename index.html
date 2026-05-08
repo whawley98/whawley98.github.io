@@ -266,6 +266,18 @@ body {
 .sync-pill.synced { color: var(--navy-soft); }
 .sync-pill.error { color: var(--pink-deep); }
 .sync-pill.updated { color: var(--gold); font-weight: 500; }
+.sync-pill.expired {
+  color: var(--pink-deep); font-weight: 500;
+  background: rgba(232, 152, 152, 0.15);
+  border-color: var(--pink-deep);
+}
+.sync-pill.expired:hover {
+  background: rgba(232, 152, 152, 0.25);
+}
+.sync-pill.expired .dot {
+  background: var(--pink-deep);
+  animation: pulse 1.6s ease-in-out infinite;
+}
 .sync-pill .dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: currentColor;
@@ -2255,7 +2267,9 @@ async function saveBookings({ syncToCloud = true } = {}) {
 function updateSyncPill(state) {
   const pill = document.getElementById('syncPill');
   const text = document.getElementById('syncText');
-  pill.classList.remove('syncing', 'synced', 'error', 'updated');
+  pill.classList.remove('syncing', 'synced', 'error', 'updated', 'expired');
+  pill.style.cursor = '';
+  pill.onclick = null;
   if (state === 'syncing') {
     pill.classList.add('syncing');
     text.textContent = 'Syncing to Drive…';
@@ -2269,6 +2283,11 @@ function updateSyncPill(state) {
     setTimeout(() => {
       if (pill.classList.contains('updated')) updateSyncPill();
     }, 2500);
+  } else if (state === 'expired') {
+    pill.classList.add('expired');
+    text.textContent = 'Sign-in expired — tap to reconnect';
+    pill.style.cursor = 'pointer';
+    pill.onclick = () => connectGoogleDrive();
   } else if (state === 'error') {
     pill.classList.add('error');
     text.textContent = 'Sync failed — saved locally';
@@ -2278,6 +2297,18 @@ function updateSyncPill(state) {
   } else {
     text.textContent = 'Saved on this device';
   }
+}
+
+// Clear stored OAuth state and surface "expired" UI. Called whenever a
+// Drive API call returns 401 (token expired/revoked) so the user actually
+// sees a problem instead of silent failures piling up in the console.
+function clearDriveAuth(reason) {
+  driveToken = null;
+  try { localStorage.removeItem(DRIVE_TOKEN_KEY); } catch(e) {}
+  stopPolling();
+  updateSyncPill('expired');
+  updateMenuStatuses();
+  if (reason) console.warn('Drive auth cleared:', reason);
 }
 
 /* ============================================================
@@ -2300,6 +2331,72 @@ function loadGoogleScript() {
     s.onerror = () => reject(new Error('Failed to load Google Identity Services'));
     document.head.appendChild(s);
   });
+}
+
+// Track whether a silent re-auth attempt is currently in flight, so we don't
+// fire multiple parallel attempts (each 401 from the polling loop would otherwise
+// trigger one).
+let silentReauthInProgress = false;
+// Cached OAuth client — created once and reused for both interactive and
+// silent token requests.
+let oauthClient = null;
+
+// Acquire a Drive access token. Returns a Promise that resolves with the
+// new token (and stores it) or rejects on failure. `silent: true` attempts
+// to renew without showing UI; `silent: false` (default) shows the popup.
+function requestDriveToken({ silent = false } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!GOOGLE_CLIENT_ID) { reject(new Error('No Client ID configured')); return; }
+    try {
+      // Build/refresh the client. We rebuild every call because the callback
+      // is per-call (we want this Promise's resolve/reject hooked in).
+      oauthClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: DRIVE_SCOPE,
+        callback: (resp) => {
+          if (resp.error) { reject(new Error(resp.error)); return; }
+          driveToken = resp.access_token;
+          const expiresAt = Date.now() + (resp.expires_in - 60) * 1000;
+          try {
+            localStorage.setItem(DRIVE_TOKEN_KEY, JSON.stringify({ token: driveToken, expiresAt }));
+          } catch(e) {}
+          resolve(driveToken);
+        },
+        error_callback: (err) => {
+          reject(new Error((err && err.type) || 'auth_error'));
+        }
+      });
+      // `prompt: ''` = silent attempt (no UI). Default = show consent/sign-in.
+      // 'none' is the official OAuth name for silent; Google Identity Services
+      // uses an empty string to mean the same thing.
+      oauthClient.requestAccessToken(silent ? { prompt: '' } : {});
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// Try to renew the token silently in the background. If successful, sync resumes
+// invisibly. If it fails, surface the 'expired' pill so the user can reconnect.
+// Called automatically when a 401 is detected in driveFetch.
+async function attemptSilentReauth() {
+  if (silentReauthInProgress) return false;
+  if (!GOOGLE_CLIENT_ID) return false;
+  silentReauthInProgress = true;
+  try {
+    await loadGoogleScript();
+    await requestDriveToken({ silent: true });
+    // Success — token is now refreshed
+    console.log('Drive: silent re-auth succeeded');
+    startPolling();
+    updateSyncPill();
+    return true;
+  } catch (e) {
+    console.log('Drive: silent re-auth failed (' + (e && e.message) + ') — user will need to tap Reconnect');
+    return false;
+  } finally {
+    silentReauthInProgress = false;
+  }
 }
 
 async function connectGoogleDrive() {
@@ -2327,37 +2424,56 @@ async function connectGoogleDrive() {
   }
   try {
     await loadGoogleScript();
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: DRIVE_SCOPE,
-      callback: async (resp) => {
-        if (resp.error) { showToast('Sign-in failed', 'error'); return; }
-        driveToken = resp.access_token;
-        const expiresAt = Date.now() + (resp.expires_in - 60) * 1000;
-        localStorage.setItem(DRIVE_TOKEN_KEY, JSON.stringify({ token: driveToken, expiresAt }));
-        showToast('Connected to Google Drive');
-        // First-time connect: try to pull existing data from Drive (merging
-        // with any local data already entered), then push the merged state up
-        try {
-          await findDriveFile();
-          if (driveFileId) {
-            await pullFromDrive();
-            renderCurrentView();
-          }
-        } catch(e) { /* tolerate missing file */ }
-        await syncToDrive();
-        startPolling();
-        updateSyncPill();
+    await requestDriveToken({ silent: false });
+    showToast('Connected to Google Drive');
+    // First-time connect: pull existing data from Drive (merging with any
+    // local data already entered), then push the merged state up
+    try {
+      await findDriveFile();
+      if (driveFileId) {
+        await pullFromDrive();
+        renderCurrentView();
       }
-    });
-    client.requestAccessToken();
+    } catch(e) { /* tolerate missing file */ }
+    await syncToDrive();
+    startPolling();
+    updateSyncPill();
   } catch(e) {
     showToast('Could not connect to Drive', 'error');
   }
 }
 
+// Wraps fetch for Drive API calls. Detects 401 (token expired/revoked).
+// On 401: first tries a silent re-auth. If silent succeeds, retries the
+// original request with the new token. If silent fails, clears auth state
+// so the user sees the "Sign-in expired" pill and can tap to reconnect.
+async function driveFetch(url, options = {}, _retry = false) {
+  const r = await fetch(url, options);
+  if (r.status === 401 && !_retry) {
+    // Try silent re-auth. If it works, redo the call with the new token.
+    const renewed = await attemptSilentReauth();
+    if (renewed) {
+      // Update the Authorization header with the freshly-issued token and retry
+      const newOpts = { ...options };
+      if (newOpts.headers) {
+        newOpts.headers = { ...newOpts.headers, Authorization: `Bearer ${driveToken}` };
+      }
+      return await driveFetch(url, newOpts, true);
+    }
+    // Silent re-auth failed — surface the expired state
+    clearDriveAuth('401 from ' + url.split('?')[0] + ' (silent re-auth failed)');
+    throw new Error('Drive auth expired');
+  }
+  if (r.status === 401 && _retry) {
+    // Already retried once and still 401 — give up
+    clearDriveAuth('401 after retry');
+    throw new Error('Drive auth expired');
+  }
+  return r;
+}
+
 async function findDriveFile() {
-  const r = await fetch(
+  const r = await driveFetch(
     `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILENAME}'&fields=files(id,name,modifiedTime)`,
     { headers: { Authorization: `Bearer ${driveToken}` } }
   );
@@ -2378,7 +2494,7 @@ async function getDriveFileMeta() {
     const meta = await findDriveFile();
     return meta;
   }
-  const r = await fetch(
+  const r = await driveFetch(
     `https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=id,modifiedTime`,
     { headers: { Authorization: `Bearer ${driveToken}` } }
   );
@@ -2397,7 +2513,7 @@ async function getDriveFileMeta() {
 // Download the full Drive payload
 async function downloadDrivePayload() {
   if (!driveToken || !driveFileId) return null;
-  const r = await fetch(
+  const r = await driveFetch(
     `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
     { headers: { Authorization: `Bearer ${driveToken}` } }
   );
@@ -2539,7 +2655,7 @@ async function syncToDrive() {
     const url = driveFileId
       ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`
       : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    const r = await fetch(url, {
+    const r = await driveFetch(url, {
       method: driveFileId ? 'PATCH' : 'POST',
       headers: {
         Authorization: `Bearer ${driveToken}`,
@@ -2557,8 +2673,12 @@ async function syncToDrive() {
     localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
     updateSyncPill();
   } catch(e) {
-    console.warn('Drive sync error', e);
-    updateSyncPill('error');
+    if (e && e.message === 'Drive auth expired') {
+      // clearDriveAuth already set the pill to 'expired' — leave it
+    } else {
+      console.warn('Drive sync error', e);
+      updateSyncPill('error');
+    }
   } finally {
     syncInProgress = false;
     if (pendingSave) {
@@ -2597,6 +2717,10 @@ async function checkForUpdates({ silent = false } = {}) {
     if (!silent) updateSyncPill();
     return false;
   } catch(e) {
+    // If 401 already cleared auth, the pill is now showing 'expired' — don't override
+    if (e && e.message === 'Drive auth expired') {
+      return false;
+    }
     console.warn('Drive update check error', e);
     if (!silent) updateSyncPill('error');
     return false;
@@ -2606,20 +2730,39 @@ async function checkForUpdates({ silent = false } = {}) {
 }
 
 // Background polling — every 60s while the tab is visible
+// Check if our access token is close to expiring. If so, kick off a silent
+// re-auth so the renewal completes BEFORE the next API call would 401.
+async function refreshTokenIfNearExpiry() {
+  try {
+    const raw = localStorage.getItem(DRIVE_TOKEN_KEY);
+    if (!raw) return;
+    const t = JSON.parse(raw);
+    const msRemaining = t.expiresAt - Date.now();
+    // 5 minute buffer — refresh once we're within 5 min of expiry
+    if (msRemaining < 5 * 60 * 1000 && msRemaining > -60 * 1000) {
+      await attemptSilentReauth();
+    }
+  } catch(e) {}
+}
+
 function startPolling() {
   stopPolling();
   if (!driveToken) return;
-  pollTimer = setInterval(() => {
-    if (!document.hidden) checkForUpdates({ silent: true });
+  pollTimer = setInterval(async () => {
+    if (document.hidden) return;
+    // Proactively renew if we're nearing token expiry
+    await refreshTokenIfNearExpiry();
+    checkForUpdates({ silent: true });
   }, 60000);
 }
 function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
-// When tab regains focus, do an immediate check
-document.addEventListener('visibilitychange', () => {
+// When tab regains focus, do an immediate check (and renew if needed)
+document.addEventListener('visibilitychange', async () => {
   if (!document.hidden && driveToken) {
+    await refreshTokenIfNearExpiry();
     checkForUpdates({ silent: true });
   }
 });

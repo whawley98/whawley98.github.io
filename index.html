@@ -637,6 +637,61 @@ body {
 .blocked-banner.active { display: block; }
 
 .bookings-list { margin-bottom: 18px; }
+
+/* Daily summary at top of bookings list */
+.day-summary {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 8px;
+  padding: 14px 18px; margin-bottom: 14px;
+  background: var(--cream);
+  border: 1px solid rgba(201, 165, 114, 0.2);
+  border-radius: 2px;
+  font-family: 'Cormorant Garamond', serif;
+  color: var(--navy); font-size: 14px;
+  font-style: italic;
+}
+.day-summary-stat strong {
+  color: var(--gold); font-style: normal;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+}
+.day-summary-divider {
+  color: var(--navy-soft); opacity: 0.4;
+}
+
+/* Gap indicators between consecutive bookings */
+.gap-indicator {
+  display: flex; align-items: center; gap: 10px;
+  margin: 4px 18px; padding: 4px 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 12px; font-style: italic;
+  color: var(--navy-soft);
+}
+.gap-indicator .gap-line {
+  flex: 1; height: 1px; background: rgba(15, 29, 58, 0.15);
+}
+.gap-indicator .gap-text {
+  white-space: nowrap; padding: 0 4px;
+  letter-spacing: 0.04em;
+}
+.gap-indicator.overlap .overlap-line {
+  background: var(--pink-deep); opacity: 0.5;
+}
+.gap-indicator.overlap .overlap-text {
+  color: var(--pink-deep); font-weight: 500;
+  font-style: normal;
+}
+
+/* Section header for canceled bookings at the bottom of the list */
+.canceled-section-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--navy-soft);
+  margin: 18px 0 8px; padding-top: 14px;
+  border-top: 1px solid rgba(15, 29, 58, 0.08);
+  text-align: center;
+}
+
 .booking-item {
   background: white; margin-bottom: 10px;
   border-radius: 2px; box-shadow: var(--shadow-soft);
@@ -820,6 +875,114 @@ body {
   background: var(--navy-deep); border-color: var(--navy-deep);
 }
 
+/* Manage Shoot Types modal */
+.types-modal { max-width: 560px; }
+.types-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+.type-row {
+  background: white; border-radius: 2px;
+  border: 1px solid rgba(15, 29, 58, 0.08);
+  box-shadow: var(--shadow-soft);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px;
+  transition: background 0.15s ease;
+}
+.type-row:hover { background: var(--cream); }
+.type-row.dragging { opacity: 0.5; }
+.type-row .drag-handle {
+  cursor: grab; color: var(--navy-soft);
+  font-size: 16px; user-select: none;
+  line-height: 1; padding: 4px;
+  flex-shrink: 0;
+}
+.type-row .drag-handle:active { cursor: grabbing; }
+.type-row .type-swatch {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  cursor: pointer; flex-shrink: 0;
+  border: 1px solid rgba(15, 29, 58, 0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+.type-row .type-name-input {
+  flex: 1; min-width: 0;
+  background: transparent;
+  border: none; border-bottom: 1px solid transparent;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px; color: var(--navy); font-weight: 500;
+  padding: 4px 0; outline: none;
+  font-style: italic;
+}
+.type-row .type-name-input:focus {
+  border-bottom-color: var(--pink-deep);
+  background: rgba(244, 194, 194, 0.05);
+}
+.type-row .type-usage-count {
+  font-size: 10px; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--navy-soft);
+  flex-shrink: 0; font-weight: 500;
+}
+.type-row .type-delete-btn {
+  background: transparent; border: 1px solid rgba(15, 29, 58, 0.15);
+  color: var(--navy-soft); width: 28px; height: 28px;
+  border-radius: 50%; cursor: pointer;
+  font-size: 16px; line-height: 1;
+  flex-shrink: 0; transition: all 0.2s ease;
+}
+.type-row .type-delete-btn:hover {
+  background: var(--pink-deep); border-color: var(--pink-deep);
+  color: white;
+}
+
+/* Color picker popover */
+.color-picker {
+  display: none; position: absolute;
+  background: white; border-radius: 4px;
+  box-shadow: var(--shadow); padding: 12px;
+  z-index: 110; border: 1px solid rgba(15, 29, 58, 0.08);
+}
+.color-picker.active { display: block; }
+.color-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.color-swatch {
+  width: 28px; height: 28px;
+  border-radius: 4px; cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s ease, border-color 0.15s ease;
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.selected {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px white inset;
+}
+
+.add-type-btn {
+  width: 100%; padding: 14px;
+  background: transparent; color: var(--navy);
+  border: 1px dashed rgba(15, 29, 58, 0.25);
+  font-family: 'Outfit', sans-serif; font-size: 11px;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+.add-type-btn:hover {
+  background: var(--pink-soft);
+  border-color: var(--pink-deep);
+  color: var(--navy);
+}
+
+.types-help {
+  font-size: 12px; color: var(--navy-soft);
+  font-style: italic; margin-top: 14px;
+  font-family: 'Cormorant Garamond', serif;
+  line-height: 1.5;
+}
+
 /* Form section is hidden by default in new modal */
 .form-section { display: none; }
 .form-section.active { display: block; margin-top: 14px; }
@@ -866,6 +1029,33 @@ body {
 }
 .btn-save:hover { background: var(--pink-deep); color: white; }
 
+/* Conflict warning shown above save button when overlap detected */
+.conflict-warning {
+  display: none;
+  margin-top: 14px; padding: 14px 16px;
+  background: rgba(232, 152, 152, 0.12);
+  border-left: 3px solid var(--pink-deep);
+  border-radius: 2px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px; color: var(--navy);
+}
+.conflict-warning.active { display: block; }
+.conflict-line {
+  font-style: italic; margin-bottom: 6px;
+  color: var(--pink-deep);
+}
+.conflict-line:last-of-type { margin-bottom: 0; }
+.conflict-line strong {
+  color: var(--navy); font-weight: 600;
+  font-style: normal;
+}
+.conflict-help {
+  font-size: 12px; color: var(--navy-soft);
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid rgba(15, 29, 58, 0.1);
+  font-style: italic;
+}
+
 /* TOAST */
 .toast {
   position: fixed; bottom: 20px; left: 50%;
@@ -880,6 +1070,35 @@ body {
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 .toast.error { background: var(--pink-deep); }
+
+/* Custom tooltip — works on desktop hover and mobile long-press.
+   Native title= doesn't appear on touch devices, so we render our own. */
+.custom-tip {
+  position: fixed; z-index: 250; pointer-events: none;
+  background: var(--navy); color: var(--pink-soft);
+  padding: 10px 14px; border-radius: 2px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px; line-height: 1.45;
+  font-style: italic;
+  max-width: 280px; word-wrap: break-word;
+  box-shadow: var(--shadow);
+  opacity: 0; transition: opacity 0.15s ease;
+  letter-spacing: 0;
+}
+.custom-tip.show { opacity: 1; }
+.custom-tip::after {
+  content: ''; position: absolute;
+  bottom: -5px; left: 16px;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--navy);
+}
+.custom-tip.below::after {
+  bottom: auto; top: -5px;
+  border-top: none;
+  border-bottom: 5px solid var(--navy);
+}
 
 /* FOOTER */
 .foot {
@@ -1079,9 +1298,11 @@ body {
   text-transform: uppercase;
 }
 .as-time {
-  font-size: 11px; letter-spacing: 0.18em;
+  font-size: 11px; letter-spacing: 0.12em;
   color: var(--pink-deep); text-transform: uppercase;
   font-weight: 500; flex-shrink: 0; text-align: right;
+  white-space: nowrap; min-width: 130px;
+  font-family: 'Outfit', sans-serif;
 }
 .agenda-blocked-tag {
   display: inline-block; padding: 4px 10px;
@@ -1600,6 +1821,11 @@ body {
       <button class="menu-item" onclick="printCurrentView();closeMainMenu()">
         <span class="menu-icon">🖨</span> Print Current View
       </button>
+      <div class="menu-divider"></div>
+      <div class="menu-section-label">Customize</div>
+      <button class="menu-item" onclick="openShootTypesModal();closeMainMenu()">
+        <span class="menu-icon">🎨</span> Manage Shoot Types
+      </button>
     </div>
   </div>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
@@ -1753,7 +1979,10 @@ body {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Phone</label>
-            <input type="tel" class="form-input" id="clientPhone" placeholder="(555) 123-4567">
+            <input type="tel" class="form-input" id="clientPhone"
+                   placeholder="(555) 123-4567"
+                   inputmode="tel" maxlength="14"
+                   oninput="formatPhoneInput(this)">
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
@@ -1763,11 +1992,11 @@ body {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Time</label>
-            <input type="time" class="form-input" id="shootTime">
+            <input type="time" class="form-input" id="shootTime" step="900" onchange="updateConflictWarning()">
           </div>
           <div class="form-group">
             <label class="form-label">Duration</label>
-            <select class="form-select" id="shootDuration">
+            <select class="form-select" id="shootDuration" onchange="updateConflictWarning()">
               <option value="30 min">30 min</option>
               <option value="1 hour" selected>1 hour</option>
               <option value="1.5 hours">1.5 hours</option>
@@ -1780,22 +2009,7 @@ body {
         </div>
         <div class="form-group">
           <label class="form-label">Shoot Type</label>
-          <select class="form-select" id="shootType">
-            <option value="Portrait">Portrait</option>
-            <option value="Family">Family</option>
-            <option value="Maternity">Maternity</option>
-            <option value="Newborn">Newborn</option>
-            <option value="Engagement">Engagement</option>
-            <option value="Wedding">Wedding</option>
-            <option value="Bridal">Bridal</option>
-            <option value="Senior Portrait">Senior Portrait</option>
-            <option value="Headshots">Headshots</option>
-            <option value="Branding">Branding</option>
-            <option value="Event">Event</option>
-            <option value="Boudoir">Boudoir</option>
-            <option value="Lifestyle">Lifestyle</option>
-            <option value="Other">Other</option>
-          </select>
+          <select class="form-select" id="shootType"></select>
         </div>
         <div class="form-group">
           <label class="form-label">Reminder</label>
@@ -1812,6 +2026,7 @@ body {
           <label class="form-label">Location / Notes</label>
           <input type="text" class="form-input" id="shootNotes" placeholder="Optional location or notes">
         </div>
+        <div id="conflictWarning" class="conflict-warning"></div>
         <button class="btn-save" id="saveBtn" onclick="saveBooking()">Save Booking</button>
       </div>
       </div>
@@ -1819,7 +2034,31 @@ body {
   </div>
 </div>
 
+<!-- MANAGE SHOOT TYPES MODAL -->
+<div class="modal-backdrop" id="typesModalBackdrop">
+  <div class="modal types-modal">
+    <div class="modal-header">
+      <div class="modal-actions">
+        <button class="modal-icon-btn" onclick="closeShootTypesModal()" aria-label="Close">×</button>
+      </div>
+      <h3 class="modal-title">Shoot Types</h3>
+      <p class="modal-date">Manage the types Mia can choose when booking a shoot</p>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+        <div class="types-list" id="typesList"></div>
+        <button class="add-type-btn" onclick="addNewShootType()">+ Add Shoot Type</button>
+        <p class="types-help">
+          Tap any type to edit its name or color. Drag to reorder.
+          Deleting a type will not affect existing bookings — they'll keep their original label.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+<div class="custom-tip" id="customTip"></div>
 
 <footer class="foot">
   <div class="foot-decoration">✦</div>
@@ -1831,24 +2070,54 @@ body {
    STATE
    ============================================================ */
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const TYPE_CLASS = {
-  'Portrait': 'type-portrait', 'Family': 'type-family',
-  'Maternity': 'type-maternity', 'Newborn': 'type-newborn',
-  'Engagement': 'type-engagement', 'Wedding': 'type-wedding',
-  'Bridal': 'type-bridal', 'Senior Portrait': 'type-senior-portrait',
-  'Headshots': 'type-headshots', 'Branding': 'type-branding',
-  'Event': 'type-event', 'Boudoir': 'type-boudoir',
-  'Lifestyle': 'type-lifestyle', 'Other': 'type-other'
-};
-const TYPE_COLORS = {
-  'Portrait': 'var(--type-portrait)', 'Family': 'var(--type-family)',
-  'Maternity': 'var(--type-maternity)', 'Newborn': 'var(--type-newborn)',
-  'Engagement': 'var(--type-engagement)', 'Wedding': 'var(--type-wedding)',
-  'Bridal': 'var(--type-bridal)', 'Senior Portrait': 'var(--type-senior)',
-  'Headshots': 'var(--type-headshots)', 'Branding': 'var(--type-branding)',
-  'Event': 'var(--type-event)', 'Boudoir': 'var(--type-boudoir)',
-  'Lifestyle': 'var(--type-lifestyle)', 'Other': 'var(--type-other)'
-};
+// Curated brand-compatible color palette for shoot types.
+// 24 swatches across 4 rows; users pick from these when editing types.
+const SHOOT_TYPE_PALETTE = [
+  // Row 1: pinks
+  '#e89898', '#f4c2c2', '#d4a8c4', '#c9748a', '#b85a72', '#9c5572',
+  // Row 2: blues / navies
+  '#1c2d52', '#5a6b8c', '#7a8ba8', '#a8b4cc', '#4a5a78', '#2c3e5e',
+  // Row 3: warms / golds / earth
+  '#c9a572', '#a89c7c', '#c98572', '#b8754c', '#8c7155', '#a86a4a',
+  // Row 4: greens / cools / neutrals
+  '#a8c4b8', '#7ea892', '#5a8c78', '#b89cc4', '#8b7da8', '#8c8c9c'
+];
+
+// Default shoot types — seed list when no managed types exist yet.
+// New users get these; managed list is fully editable from Tools.
+const DEFAULT_SHOOT_TYPES = [
+  { name: 'Portrait',         color: '#e89898' },
+  { name: 'Family',           color: '#c9a572' },
+  { name: 'Maternity',        color: '#d4a8c4' },
+  { name: 'Newborn',          color: '#f4c2c2' },
+  { name: 'Engagement',       color: '#b89cc4' },
+  { name: 'Wedding',          color: '#8b7da8' },
+  { name: 'Bridal',           color: '#d4b8d8' },
+  { name: 'Senior Portrait',  color: '#a8c4b8' },
+  { name: 'Headshots',        color: '#1c2d52' },
+  { name: 'Branding',         color: '#5a6b8c' },
+  { name: 'Event',            color: '#c98572' },
+  { name: 'Boudoir',          color: '#9c5572' },
+  { name: 'Lifestyle',        color: '#a89c7c' },
+  { name: 'Other',            color: '#8c8c9c' }
+];
+
+// Live array — populated from storage on init, defaults otherwise.
+let shootTypes = [];
+
+// Lookup helpers — replace the old TYPE_COLORS / TYPE_CLASS pattern.
+function getShootTypeColor(name) {
+  const t = shootTypes.find(x => x.name === name);
+  return t ? t.color : '#8c8c9c'; // fallback gray for orphaned/old types
+}
+// Backwards-compat shim: TYPE_COLORS/TYPE_CLASS are no longer used directly,
+// but if any old reference slips through, this logs and returns sane defaults.
+const TYPE_COLORS = new Proxy({}, {
+  get(_, name) { return getShootTypeColor(name); }
+});
+const TYPE_CLASS = new Proxy({}, {
+  get() { return ''; } // class-based styling is gone in favor of inline color
+});
 
 let YEAR = new Date().getFullYear();
 let bookings = {}; // { "YYYY-MM-DD": { blocked: bool, items: [{...}] } }
@@ -1869,6 +2138,7 @@ let expandedBookingIdx = null; // which booking is expanded in the modal
 let cancelingIdx = null; // which booking is showing the inline cancel prompt
 
 const STORAGE_KEY = 'mbm_calendar_v2';
+const SHOOT_TYPES_KEY = 'mbm_shoot_types_v1';
 const DRIVE_TOKEN_KEY = 'mbm_drive_token';
 const DRIVE_FILE_KEY = 'mbm_drive_file_id';
 const LAST_SYNCED_KEY = 'mbm_last_synced_at';
@@ -1927,6 +2197,22 @@ async function loadBookings() {
   }
   if (data && typeof data === 'object') bookings = data;
 
+  // Load shoot types (or seed defaults on first run)
+  let typesData = null;
+  try { typesData = await dbGet(SHOOT_TYPES_KEY); } catch(e) {}
+  if (!typesData) {
+    try {
+      const raw = localStorage.getItem(SHOOT_TYPES_KEY);
+      if (raw) typesData = JSON.parse(raw);
+    } catch(e) {}
+  }
+  if (Array.isArray(typesData) && typesData.length > 0) {
+    shootTypes = typesData;
+  } else {
+    shootTypes = JSON.parse(JSON.stringify(DEFAULT_SHOOT_TYPES));
+    await saveShootTypes({ syncToCloud: false });
+  }
+
   // Restore Drive credentials
   try {
     const tokenRaw = localStorage.getItem(DRIVE_TOKEN_KEY);
@@ -1939,6 +2225,15 @@ async function loadBookings() {
     driveFileId = localStorage.getItem(DRIVE_FILE_KEY);
     lastSyncedAt = localStorage.getItem(LAST_SYNCED_KEY);
   } catch(e) {}
+}
+
+async function saveShootTypes({ syncToCloud = true } = {}) {
+  try { await dbSet(SHOOT_TYPES_KEY, shootTypes); } catch(e) {}
+  try { localStorage.setItem(SHOOT_TYPES_KEY, JSON.stringify(shootTypes)); } catch(e) {}
+  if (syncToCloud && driveToken) {
+    clearTimeout(saveDebounce);
+    saveDebounce = setTimeout(syncToDrive, 1500);
+  }
 }
 
 async function saveBookings({ syncToCloud = true } = {}) {
@@ -1991,7 +2286,7 @@ function updateSyncPill(state) {
    The user signs in once; token is cached in localStorage with expiry.
    File: appDataFolder/moments-by-mia-bookings.json (private to this app)
    ============================================================ */
-const GOOGLE_CLIENT_ID = '305943807304-cchvc059pi7vitnshh0itiv2kod4i7he.apps.googleusercontent.com'; // ← Mia fills this in; instructions printed in console below
+const GOOGLE_CLIENT_ID = ''; // ← Mia fills this in; instructions printed in console below
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 const DRIVE_FILENAME = 'moments-by-mia-bookings.json';
 
@@ -2183,14 +2478,22 @@ async function pullFromDrive() {
   if (!payload || !payload.bookings) return false;
 
   const remoteBookings = payload.bookings;
-  const localSnapshot = JSON.stringify(bookings);
+  const localSnapshot = JSON.stringify({ bookings, shootTypes });
   const merged = mergeBookings(bookings, remoteBookings);
-  const mergedSnapshot = JSON.stringify(merged);
-
   bookings = merged;
+
+  // For shoot types, last-write-wins is fine — they don't conflict often,
+  // and we don't have a per-type updatedAt. If remote has types, take them.
+  if (Array.isArray(payload.shootTypes) && payload.shootTypes.length > 0) {
+    shootTypes = payload.shootTypes;
+    await saveShootTypes({ syncToCloud: false });
+  }
+
+  const mergedSnapshot = JSON.stringify({ bookings, shootTypes });
+
   lastSyncedAt = payload.lastModified || new Date().toISOString();
   localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
-  await saveBookings({ syncToCloud: false }); // persist locally without re-syncing
+  await saveBookings({ syncToCloud: false });
 
   return localSnapshot !== mergedSnapshot;
 }
@@ -2221,9 +2524,10 @@ async function syncToDrive() {
 
     const lastModified = new Date().toISOString();
     const payload = JSON.stringify({
-      version: 2,
+      version: 3,
       lastModified,
-      bookings
+      bookings,
+      shootTypes
     }, null, 2);
     const metadata = { name: DRIVE_FILENAME, parents: ['appDataFolder'] };
     const boundary = 'mbm_boundary_' + Math.random().toString(36).slice(2);
@@ -2325,9 +2629,10 @@ document.addEventListener('visibilitychange', () => {
    ============================================================ */
 function exportJSON() {
   const blob = new Blob([JSON.stringify({
-    version: 2,
+    version: 3,
     exportedAt: new Date().toISOString(),
-    bookings
+    bookings,
+    shootTypes
   }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2345,15 +2650,20 @@ function importJSON(e) {
   reader.onload = async () => {
     try {
       const data = JSON.parse(reader.result);
-      const incoming = data.bookings || data; // accept v1 or v2
+      const incoming = data.bookings || data; // accept v1, v2, or v3
       if (typeof incoming !== 'object') throw new Error('Invalid file');
       if (!confirm('This will merge with your current bookings. Continue?')) return;
-      // Merge — incoming takes precedence on conflict
+      // Merge bookings — incoming takes precedence on conflict
       Object.keys(incoming).forEach(key => {
         const v = incoming[key];
-        // Migrate v1 array shape to v2 object shape
+        // Migrate v1 array shape to v2/v3 object shape
         bookings[key] = Array.isArray(v) ? { blocked: false, items: v } : v;
       });
+      // Restore shoot types if the file had them
+      if (Array.isArray(data.shootTypes) && data.shootTypes.length > 0) {
+        shootTypes = data.shootTypes;
+        await saveShootTypes({ syncToCloud: false });
+      }
       await saveBookings();
       renderCurrentView();
       showToast('Restore complete');
@@ -2524,6 +2834,49 @@ function escapeHTML(str) {
   if (!str) return '';
   return String(str).replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Live-format a phone input as the user types. Stores in display format
+// "(555) 123-4567" so the click-to-call link works without extra processing.
+// Handles paste, backspace through formatting characters, and cursor preservation.
+function formatPhoneInput(input) {
+  const oldValue = input.value;
+  const oldCursor = input.selectionStart;
+
+  // Count digits before the cursor — the cursor stays at the same digit position
+  const digitsBeforeCursor = oldValue.slice(0, oldCursor).replace(/\D/g, '').length;
+
+  // Strip everything that isn't a digit, then re-format
+  let digits = oldValue.replace(/\D/g, '');
+  // If the user pasted 11 digits starting with "1" (US country code prefix),
+  // drop the leading 1 so they end up with the 10-digit local number
+  if (digits.length === 11 && digits[0] === '1') digits = digits.slice(1);
+  digits = digits.slice(0, 10);
+  let formatted = '';
+  if (digits.length === 0) {
+    formatted = '';
+  } else if (digits.length <= 3) {
+    formatted = '(' + digits;
+  } else if (digits.length <= 6) {
+    formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3);
+  } else {
+    formatted = '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6);
+  }
+  input.value = formatted;
+
+  // Restore cursor — count forward through `formatted` until we've passed the
+  // same number of digits the cursor was originally past
+  let newCursor = 0, seenDigits = 0;
+  for (let i = 0; i < formatted.length && seenDigits < digitsBeforeCursor; i++) {
+    if (/\d/.test(formatted[i])) seenDigits++;
+    newCursor = i + 1;
+  }
+  // If the user just typed a digit that triggered the auto-insertion of " " or "-",
+  // skip over the formatting char so the cursor lands after it
+  while (newCursor < formatted.length && !/\d/.test(formatted[newCursor]) && newCursor === oldCursor) {
+    newCursor++;
+  }
+  try { input.setSelectionRange(newCursor, newCursor); } catch(e) {}
 }
 function showToast(msg, type = '', duration = 2400) {
   const t = document.getElementById('toast');
@@ -2839,15 +3192,24 @@ function renderAgenda() {
         shootsHTML += `<div class="agenda-blocked-tag" style="margin-bottom:4px">Blocked</div>`;
       }
       items.forEach(b => {
-        const color = TYPE_COLORS[b.type] || 'var(--pink-deep)';
+        const color = getShootTypeColor(b.type);
         const canceledCls = b.canceled ? ' canceled' : '';
+        const start = parseTimeToMinutes(b.time);
+        const dur = parseDurationToMinutes(b.duration);
+        const end = start != null ? formatMinutesToTime(start + dur) : '';
+        const timeRange = end
+          ? `${escapeHTML(b.time)} – ${escapeHTML(end)}`
+          : escapeHTML(b.time || '');
+        const metaParts = [escapeHTML(b.type)];
+        if (b.duration) metaParts.push(escapeHTML(b.duration));
+        if (b.notes) metaParts.push(escapeHTML(b.notes));
         shootsHTML += `
           <div class="agenda-shoot${canceledCls}" style="border-left-color:${color}">
             <div class="as-info">
               <div class="as-name">${escapeHTML(b.name)}${b.canceled ? ' <span class="canceled-badge">Canceled</span>' : ''}</div>
-              <div class="as-meta">${escapeHTML(b.type)}${b.notes ? ' · ' + escapeHTML(b.notes) : ''}</div>
+              <div class="as-meta">${metaParts.join(' · ')}</div>
             </div>
-            <div class="as-time">${escapeHTML(b.time)}</div>
+            <div class="as-time">${timeRange}</div>
           </div>`;
       });
     }
@@ -2936,11 +3298,14 @@ function renderFullCalendar(monthIdx) {
         pillsHTML = `<div class="booking-pill blocked-pill">Blocked</div>`;
       } else {
         items.slice(0, 3).forEach(b => {
-          const color = TYPE_COLORS[b.type] || 'var(--navy)';
+          const color = getShootTypeColor(b.type);
           const cancelStyle = b.canceled
             ? `background:transparent;color:${color};border:1px dashed ${color};text-decoration:line-through;`
             : `background:${color}`;
-          pillsHTML += `<div class="booking-pill" style="${cancelStyle}">${escapeHTML(b.time || '')} ${escapeHTML(b.name || '')}</div>`;
+          // Compact display + full info as data-tooltip for hover/long-press
+          const compact = `${compactTime(b.time)} ${abbreviateName(b.name)}`.trim();
+          const tip = bookingTooltip(b);
+          pillsHTML += `<div class="booking-pill" style="${cancelStyle}" data-tip="${escapeHTML(tip)}">${escapeHTML(compact)}</div>`;
         });
         if (items.length > 3) {
           pillsHTML += `<div class="booking-pill" style="background:transparent;color:var(--navy);font-style:italic">+${items.length - 3} more</div>`;
@@ -3031,9 +3396,49 @@ function renderBookings(key) {
     return;
   }
 
-  list.innerHTML = items.map((b, i) => {
-    const typeClass = TYPE_CLASS[b.type] || '';
-    const typeBg = TYPE_COLORS[b.type] || 'var(--navy)';
+  // Compute time ranges for each item; sort active (non-canceled) ones to compute gaps
+  const itemsWithTimes = items.map((b, idx) => {
+    const start = parseTimeToMinutes(b.time);
+    const dur = parseDurationToMinutes(b.duration);
+    const end = start != null ? start + dur : null;
+    return { b, idx, start, end, dur };
+  });
+
+  // Active items in chronological order (used for summary + gap calc)
+  const activeSorted = itemsWithTimes
+    .filter(x => !x.b.canceled && x.start != null)
+    .sort((a, b) => a.start - b.start);
+
+  // Build daily summary line for days with 2+ active bookings
+  let summaryHTML = '';
+  if (activeSorted.length >= 2) {
+    const first = activeSorted[0];
+    const last = activeSorted[activeSorted.length - 1];
+    const totalWork = activeSorted.reduce((s, x) => s + x.dur, 0);
+    let totalGaps = 0;
+    for (let i = 1; i < activeSorted.length; i++) {
+      const gap = activeSorted[i].start - activeSorted[i - 1].end;
+      if (gap > 0) totalGaps += gap;
+    }
+    const count = activeSorted.length;
+    summaryHTML = `
+      <div class="day-summary">
+        <span class="day-summary-stat"><strong>${count}</strong> ${count === 1 ? 'shoot' : 'shoots'}</span>
+        <span class="day-summary-divider">·</span>
+        <span class="day-summary-stat">first ${formatMinutesToTime(first.start)}</span>
+        <span class="day-summary-divider">·</span>
+        <span class="day-summary-stat">last ends ${formatMinutesToTime(last.end)}</span>
+        <span class="day-summary-divider">·</span>
+        <span class="day-summary-stat">${formatDurationMinutes(totalWork)} working</span>
+        ${totalGaps > 0 ? `<span class="day-summary-divider">·</span><span class="day-summary-stat">${formatDurationMinutes(totalGaps)} gap</span>` : ''}
+      </div>
+    `;
+  }
+
+  // Render each item; insert gap indicators between consecutive active items
+  const renderItem = (x) => {
+    const { b, idx: i, start, end } = x;
+    const typeBg = getShootTypeColor(b.type);
     const expanded = expandedBookingIdx === i ? ' expanded' : '';
     const canceled = b.canceled ? ' canceled' : '';
 
@@ -3076,13 +3481,20 @@ function renderBookings(key) {
             <button class="booking-action-btn delete" onclick="event.stopPropagation();deleteBooking(${i})">Delete</button>
           </div>`;
 
+    // Time range display: "10:00 AM – 11:00 AM · 1 hour"
+    const endTimeStr = end != null ? formatMinutesToTime(end) : '';
+    const timeRange = endTimeStr
+      ? `${escapeHTML(b.time)} – ${escapeHTML(endTimeStr)}`
+      : escapeHTML(b.time || '');
+    const durationStr = b.duration ? ` · ${escapeHTML(b.duration)}` : '';
+
     return `
-      <div class="booking-item ${typeClass}${expanded}${canceled}">
+      <div class="booking-item${expanded}${canceled}">
         <div class="booking-summary" onclick="toggleBookingExpand(${i})">
           <div class="booking-summary-left">
             <div class="booking-name">${escapeHTML(b.name)}</div>
             <div class="booking-meta-row">
-              <span class="booking-time">${escapeHTML(b.time)}${b.duration ? ' · ' + escapeHTML(b.duration) : ''}</span>
+              <span class="booking-time">${timeRange}${durationStr}</span>
               <span class="booking-type" style="background:${typeBg}">${escapeHTML(b.type)}</span>
               ${b.canceled ? '<span class="canceled-badge">Canceled</span>' : ''}
             </div>
@@ -3102,7 +3514,49 @@ function renderBookings(key) {
         </div>
       </div>
     `;
-  }).join('');
+  };
+
+  // Build output: render in original order (not sorted) so canceled items
+  // appear where they were stored. Insert gap indicators only between
+  // consecutive ACTIVE bookings sorted by time, computed from activeSorted.
+  // To do this, we render activeSorted with gaps interleaved, then append
+  // canceled items at the bottom.
+  let bodyHTML = '';
+
+  // Active bookings, sorted, with gap indicators between them
+  for (let i = 0; i < activeSorted.length; i++) {
+    if (i > 0) {
+      const prev = activeSorted[i - 1];
+      const cur = activeSorted[i];
+      const gap = cur.start - prev.end;
+      if (gap > 0) {
+        bodyHTML += `
+          <div class="gap-indicator">
+            <span class="gap-line"></span>
+            <span class="gap-text">${formatDurationMinutes(gap)} between</span>
+            <span class="gap-line"></span>
+          </div>`;
+      } else if (gap < 0) {
+        bodyHTML += `
+          <div class="gap-indicator overlap">
+            <span class="gap-line overlap-line"></span>
+            <span class="gap-text overlap-text">⚠ overlaps by ${formatDurationMinutes(-gap)}</span>
+            <span class="gap-line overlap-line"></span>
+          </div>`;
+      }
+      // gap === 0 means back-to-back; render no indicator (clean visual)
+    }
+    bodyHTML += renderItem(activeSorted[i]);
+  }
+
+  // Canceled bookings appended below the active list
+  const canceledItems = itemsWithTimes.filter(x => x.b.canceled);
+  if (canceledItems.length > 0) {
+    bodyHTML += `<div class="canceled-section-label">Canceled</div>`;
+    canceledItems.forEach(x => { bodyHTML += renderItem(x); });
+  }
+
+  list.innerHTML = summaryHTML + bodyHTML;
 }
 
 function toggleBookingExpand(idx) {
@@ -3135,6 +3589,204 @@ function toggleAddForm() {
   }
 }
 
+/* ============================================================
+   MANAGE SHOOT TYPES
+   Lets users add, rename, recolor, reorder, and delete shoot types.
+   Deleting a type does NOT modify existing bookings — they keep their
+   historical type label, but no longer show the type's color.
+   ============================================================ */
+
+let activeColorPickerIdx = null; // which row's color picker is open
+
+function openShootTypesModal() {
+  renderShootTypesList();
+  document.getElementById('typesModalBackdrop').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeShootTypesModal() {
+  closeColorPicker();
+  document.getElementById('typesModalBackdrop').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function countTypeUsage(typeName) {
+  let count = 0;
+  Object.values(bookings).forEach(day => {
+    if (!day.items) return;
+    day.items.forEach(b => { if (b.type === typeName) count++; });
+  });
+  return count;
+}
+
+function renderShootTypesList() {
+  const list = document.getElementById('typesList');
+  list.innerHTML = '';
+  shootTypes.forEach((t, idx) => {
+    const usageCount = countTypeUsage(t.name);
+    const row = document.createElement('div');
+    row.className = 'type-row';
+    row.draggable = true;
+    row.dataset.idx = idx;
+    row.innerHTML = `
+      <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+      <span class="type-swatch" style="background:${t.color}"
+            onclick="event.stopPropagation();toggleColorPicker(${idx}, this)"
+            title="Tap to change color"></span>
+      <input type="text" class="type-name-input" value="${escapeHTML(t.name)}"
+             onchange="renameShootType(${idx}, this.value)"
+             onkeydown="if(event.key==='Enter')this.blur()">
+      <span class="type-usage-count">${usageCount} ${usageCount === 1 ? 'use' : 'uses'}</span>
+      <button class="type-delete-btn" onclick="deleteShootType(${idx})"
+              title="Delete this type (existing bookings keep their label)">×</button>
+    `;
+    // Drag-and-drop reordering
+    row.addEventListener('dragstart', e => {
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', idx);
+    });
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+    row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx = parseInt(row.dataset.idx);
+      if (fromIdx !== toIdx) reorderShootType(fromIdx, toIdx);
+    });
+    list.appendChild(row);
+  });
+}
+
+async function addNewShootType() {
+  // Pick the first unused palette color, or fall back to a random one
+  const used = new Set(shootTypes.map(t => t.color.toLowerCase()));
+  const unused = SHOOT_TYPE_PALETTE.find(c => !used.has(c.toLowerCase()));
+  const color = unused || SHOOT_TYPE_PALETTE[Math.floor(Math.random() * SHOOT_TYPE_PALETTE.length)];
+
+  // Generate a unique placeholder name
+  let baseName = 'New Type';
+  let name = baseName;
+  let n = 2;
+  while (shootTypes.find(t => t.name === name)) {
+    name = `${baseName} ${n++}`;
+  }
+  shootTypes.push({ name, color });
+  await saveShootTypes();
+  renderShootTypesList();
+  // Auto-focus the new row's input so user can immediately rename it
+  setTimeout(() => {
+    const list = document.getElementById('typesList');
+    const lastRow = list.lastElementChild;
+    if (lastRow) {
+      const input = lastRow.querySelector('.type-name-input');
+      if (input) { input.focus(); input.select(); }
+    }
+  }, 50);
+}
+
+async function renameShootType(idx, newName) {
+  const trimmed = (newName || '').trim();
+  if (!trimmed) {
+    showToast('Type name required', 'error');
+    renderShootTypesList();
+    return;
+  }
+  // Prevent duplicate names (case-insensitive)
+  const existing = shootTypes.findIndex((t, i) => i !== idx && t.name.toLowerCase() === trimmed.toLowerCase());
+  if (existing !== -1) {
+    showToast('That name is already taken', 'error');
+    renderShootTypesList();
+    return;
+  }
+  const oldName = shootTypes[idx].name;
+  if (oldName === trimmed) return;
+  shootTypes[idx].name = trimmed;
+  await saveShootTypes();
+  // Re-render any active calendar view to reflect color changes
+  renderCurrentView();
+  showToast('Renamed');
+}
+
+async function deleteShootType(idx) {
+  const t = shootTypes[idx];
+  const usageCount = countTypeUsage(t.name);
+  const msg = usageCount > 0
+    ? `Delete "${t.name}"? ${usageCount} existing ${usageCount === 1 ? 'booking keeps' : 'bookings keep'} the label, but will show as gray.`
+    : `Delete "${t.name}"?`;
+  if (!confirm(msg)) return;
+  shootTypes.splice(idx, 1);
+  // Edge case: if we just deleted the last type, seed with one default so
+  // the booking form's dropdown isn't empty.
+  if (shootTypes.length === 0) {
+    shootTypes.push({ name: 'Other', color: '#8c8c9c' });
+  }
+  await saveShootTypes();
+  renderShootTypesList();
+  renderCurrentView();
+  showToast('Deleted');
+}
+
+async function reorderShootType(fromIdx, toIdx) {
+  const [moved] = shootTypes.splice(fromIdx, 1);
+  shootTypes.splice(toIdx, 0, moved);
+  await saveShootTypes();
+  renderShootTypesList();
+}
+
+function toggleColorPicker(idx, swatchEl) {
+  closeColorPicker();
+  if (activeColorPickerIdx === idx) {
+    activeColorPickerIdx = null;
+    return;
+  }
+  activeColorPickerIdx = idx;
+  const picker = document.createElement('div');
+  picker.className = 'color-picker active';
+  picker.id = 'activeColorPicker';
+  const currentColor = shootTypes[idx].color.toLowerCase();
+  picker.innerHTML = `
+    <div class="color-picker-grid">
+      ${SHOOT_TYPE_PALETTE.map(c => `
+        <div class="color-swatch ${c.toLowerCase() === currentColor ? 'selected' : ''}"
+             style="background:${c}"
+             onclick="pickColor(${idx}, '${c}')"></div>
+      `).join('')}
+    </div>
+  `;
+  // Position the picker near the swatch
+  const rect = swatchEl.getBoundingClientRect();
+  picker.style.position = 'fixed';
+  picker.style.left = Math.min(rect.left, window.innerWidth - 240) + 'px';
+  picker.style.top = (rect.bottom + 6) + 'px';
+  document.body.appendChild(picker);
+}
+
+function closeColorPicker() {
+  const existing = document.getElementById('activeColorPicker');
+  if (existing) existing.remove();
+  activeColorPickerIdx = null;
+}
+
+async function pickColor(idx, color) {
+  shootTypes[idx].color = color;
+  closeColorPicker();
+  await saveShootTypes();
+  renderShootTypesList();
+  renderCurrentView();
+}
+
+// Click-outside to close the color picker and types modal
+document.addEventListener('click', e => {
+  const picker = document.getElementById('activeColorPicker');
+  if (picker && !picker.contains(e.target) && !e.target.classList.contains('type-swatch')) {
+    closeColorPicker();
+  }
+});
+document.getElementById('typesModalBackdrop').addEventListener('click', e => {
+  if (e.target.id === 'typesModalBackdrop') closeShootTypesModal();
+});
+
 function reminderLabel(mins) {
   const m = parseInt(mins);
   if (m === 60) return '1 hour before';
@@ -3145,15 +3797,293 @@ function reminderLabel(mins) {
   return `${m} min before`;
 }
 
+/* ============================================================
+   CUSTOM TOOLTIP
+   Desktop: shows on hover. Mobile: shows on long-press (500ms).
+   Reads tip text from any element with data-tip="...".
+   ============================================================ */
+(function () {
+  const tip = document.getElementById('customTip');
+  let hoverEl = null;
+  let longPressTimer = null;
+  let touchStartTarget = null;
+  let suppressClickAfterLongPress = false;
+
+  function showTip(el, x, y) {
+    const text = el.getAttribute('data-tip');
+    if (!text) return;
+    tip.textContent = text;
+    tip.classList.remove('below');
+    // Position above the element by default; flip below if too close to top
+    const rect = el.getBoundingClientRect();
+    const tipMaxHeight = 80; // approximate
+    const aboveSpace = rect.top;
+    if (aboveSpace < tipMaxHeight + 12) {
+      tip.style.top = (rect.bottom + 8) + 'px';
+      tip.classList.add('below');
+    } else {
+      tip.style.top = (rect.top - tipMaxHeight + 8) + 'px';
+    }
+    // Horizontal positioning — center on the element, but keep on-screen
+    const tipWidth = Math.min(280, Math.max(text.length * 6 + 28, 100));
+    let left = rect.left + (rect.width / 2) - (tipWidth / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth - tipWidth - 8));
+    tip.style.left = left + 'px';
+    tip.classList.add('show');
+  }
+
+  function hideTip() {
+    tip.classList.remove('show');
+    hoverEl = null;
+  }
+
+  // Desktop: hover handlers (only attach on devices that support hover)
+  if (window.matchMedia('(hover: hover)').matches) {
+    document.addEventListener('mouseover', e => {
+      const el = e.target.closest('[data-tip]');
+      if (el && el !== hoverEl) {
+        hoverEl = el;
+        showTip(el);
+      }
+    });
+    document.addEventListener('mouseout', e => {
+      if (e.target === hoverEl || (hoverEl && !hoverEl.contains(e.relatedTarget))) {
+        hideTip();
+      }
+    });
+  }
+
+  // Mobile: long-press to show tooltip
+  document.addEventListener('touchstart', e => {
+    const el = e.target.closest('[data-tip]');
+    if (!el) return;
+    touchStartTarget = el;
+    longPressTimer = setTimeout(() => {
+      showTip(el);
+      suppressClickAfterLongPress = true;
+      // Auto-dismiss after 3 seconds
+      setTimeout(hideTip, 3000);
+    }, 500);
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    clearTimeout(longPressTimer);
+    touchStartTarget = null;
+    // Reset suppression flag after the click event has had a chance to fire
+    setTimeout(() => { suppressClickAfterLongPress = false; }, 50);
+  });
+
+  document.addEventListener('touchmove', () => {
+    clearTimeout(longPressTimer);
+    touchStartTarget = null;
+  }, { passive: true });
+
+  // Suppress the click that follows a long-press so a tooltip view doesn't
+  // also open the day modal
+  document.addEventListener('click', e => {
+    if (suppressClickAfterLongPress) {
+      e.stopPropagation();
+      e.preventDefault();
+      suppressClickAfterLongPress = false;
+    }
+  }, true);
+
+  // Hide tooltip on scroll
+  window.addEventListener('scroll', hideTip, { passive: true });
+})();
+
+/* ============================================================
+   TIME & NAME FORMATTING HELPERS
+   Used by pills, agenda, and day modal to keep formatting consistent.
+   ============================================================ */
+
+// Parse a "10:00 AM" style time string into total minutes since midnight.
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return null;
+  const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let hr = parseInt(m[1]); const mn = parseInt(m[2]);
+  const ap = m[3].toUpperCase();
+  if (ap === 'PM' && hr !== 12) hr += 12;
+  if (ap === 'AM' && hr === 12) hr = 0;
+  return hr * 60 + mn;
+}
+
+// Format minutes-since-midnight back to "10:00 AM" style.
+function formatMinutesToTime(mins) {
+  if (mins == null) return '';
+  // Wrap past midnight if needed
+  mins = ((mins % 1440) + 1440) % 1440;
+  let hr = Math.floor(mins / 60); const mn = mins % 60;
+  const ap = hr >= 12 ? 'PM' : 'AM';
+  hr = hr % 12; if (hr === 0) hr = 12;
+  return `${hr}:${String(mn).padStart(2, '0')} ${ap}`;
+}
+
+// Convert a duration string ("1 hour", "30 min", "2 hours") to minutes.
+function parseDurationToMinutes(d) {
+  if (!d) return 60; // default 1 hour
+  const s = String(d).toLowerCase();
+  const numMatch = s.match(/(\d+(?:\.\d+)?)/);
+  const num = numMatch ? parseFloat(numMatch[1]) : 1;
+  if (s.includes('hour') || s.includes('hr')) return Math.round(num * 60);
+  if (s.includes('min')) return Math.round(num);
+  return Math.round(num * 60);
+}
+
+// Compute end time from a booking's start time + duration.
+function bookingEndTime(b) {
+  const start = parseTimeToMinutes(b.time);
+  if (start == null) return '';
+  const dur = parseDurationToMinutes(b.duration);
+  return formatMinutesToTime(start + dur);
+}
+
+// Compact time format for cramped spaces: "10a", "2:30p", "12p".
+function compactTime(timeStr) {
+  if (!timeStr) return '';
+  const m = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return timeStr;
+  const hr = parseInt(m[1]); const mn = parseInt(m[2]);
+  const ap = m[3].toLowerCase()[0]; // 'a' or 'p'
+  return mn === 0 ? `${hr}${ap}` : `${hr}:${String(mn).padStart(2,'0')}${ap}`;
+}
+
+// Abbreviate a client name for display in cramped spaces.
+//   "Sarah Johnson"        -> "S.Johnson"
+//   "Mary Beth Carter"     -> "M.Carter" (skip middle names)
+//   "Madonna"              -> "Madonna"  (single name)
+//   "The Garcia Family"    -> "The Garcia Family" (3+ words = group, leave alone)
+//   "Smith Family"         -> "Smith Family" (looks like a group)
+function abbreviateName(name) {
+  if (!name) return '';
+  const trimmed = name.trim();
+  const words = trimmed.split(/\s+/);
+  if (words.length === 1) return trimmed; // single name, can't abbreviate
+  // 3+ words: heuristic for groups/families/parties — leave intact
+  if (words.length >= 3) return trimmed;
+  // 2 words: classic First + Last → abbreviate first
+  const first = words[0];
+  const last = words[words.length - 1];
+  if (!first || !last) return trimmed;
+  return `${first[0]}.${last}`;
+}
+
+// Build the rich tooltip text for a booking pill.
+// Shown on desktop hover, mobile long-press.
+function bookingTooltip(b) {
+  const parts = [];
+  parts.push(b.name || '(no name)');
+  const end = bookingEndTime(b);
+  parts.push(end ? `${b.time} – ${end}` : (b.time || ''));
+  if (b.duration) parts.push(b.duration);
+  if (b.type) parts.push(b.type);
+  if (b.canceled) parts.push('CANCELED');
+  return parts.filter(Boolean).join(' · ');
+}
+
+// Format a duration in minutes as a human-readable string.
+//   45 -> "45 min"
+//   60 -> "1 hour"
+//   135 -> "2 hr 15 min"
+//   180 -> "3 hours"
+function formatDurationMinutes(mins) {
+  if (mins == null || mins === 0) return '0 min';
+  const abs = Math.abs(mins);
+  const hrs = Math.floor(abs / 60);
+  const min = abs % 60;
+  if (hrs === 0) return `${min} min`;
+  if (min === 0) return hrs === 1 ? '1 hour' : `${hrs} hours`;
+  if (hrs === 1) return `1 hr ${min} min`;
+  return `${hrs} hr ${min} min`;
+}
+
+// Populate the Shoot Type dropdown from the managed shootTypes list.
+// `selectedValue` lets the caller restore a previously-chosen value
+// (e.g., when editing an existing booking).
+function populateShootTypeSelect(selectedValue) {
+  const sel = document.getElementById('shootType');
+  if (!sel) return;
+  sel.innerHTML = '';
+  shootTypes.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.name;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+  // If the previously-selected type no longer exists in the managed list
+  // (e.g., user deleted it after editing this booking), append a tombstone
+  // entry so the dropdown still reflects what's stored.
+  if (selectedValue && !shootTypes.find(t => t.name === selectedValue)) {
+    const opt = document.createElement('option');
+    opt.value = selectedValue;
+    opt.textContent = selectedValue + ' (deleted)';
+    sel.appendChild(opt);
+  }
+  sel.value = selectedValue || (shootTypes[0] && shootTypes[0].name) || '';
+}
+
 function clearForm() {
   document.getElementById('clientName').value = '';
   document.getElementById('clientPhone').value = '';
   document.getElementById('clientEmail').value = '';
   document.getElementById('shootTime').value = '';
   document.getElementById('shootDuration').value = '1 hour';
-  document.getElementById('shootType').value = 'Portrait';
+  populateShootTypeSelect();
   document.getElementById('shootReminder').value = '1440';
   document.getElementById('shootNotes').value = '';
+  const warn = document.getElementById('conflictWarning');
+  if (warn) { warn.classList.remove('active'); warn.innerHTML = ''; }
+}
+
+// Find any active (non-canceled) bookings on the current day whose time
+// range overlaps with the supplied range. Excludes `excludeIdx` (used when
+// editing — don't flag the booking as conflicting with itself).
+function findConflicts(dateKey, startMin, endMin, excludeIdx) {
+  const day = bookings[dateKey];
+  if (!day || !day.items) return [];
+  return day.items
+    .map((b, idx) => ({ b, idx }))
+    .filter(x => x.idx !== excludeIdx && !x.b.canceled)
+    .map(x => {
+      const s = parseTimeToMinutes(x.b.time);
+      const d = parseDurationToMinutes(x.b.duration);
+      const e = s != null ? s + d : null;
+      return { ...x, start: s, end: e };
+    })
+    .filter(x => x.start != null && x.end != null
+      && startMin < x.end && endMin > x.start);
+}
+
+// Recompute and render the conflict warning live as user types/changes inputs.
+function updateConflictWarning() {
+  const warn = document.getElementById('conflictWarning');
+  if (!warn) return;
+  const time = document.getElementById('shootTime').value;
+  const duration = document.getElementById('shootDuration').value;
+  if (!time || !currentDateKey) {
+    warn.classList.remove('active');
+    warn.innerHTML = '';
+    return;
+  }
+  const [h, mn] = time.split(':');
+  const startMin = parseInt(h) * 60 + parseInt(mn);
+  const durMin = parseDurationToMinutes(duration);
+  const endMin = startMin + durMin;
+
+  const conflicts = findConflicts(currentDateKey, startMin, endMin, editingIndex);
+  if (conflicts.length === 0) {
+    warn.classList.remove('active');
+    warn.innerHTML = '';
+    return;
+  }
+  const lines = conflicts.map(c => {
+    const cStart = formatMinutesToTime(c.start);
+    const cEnd = formatMinutesToTime(c.end);
+    return `<div class="conflict-line">⚠ Conflicts with <strong>${escapeHTML(c.b.name)}</strong> (${cStart} – ${cEnd})</div>`;
+  });
+  warn.innerHTML = `${lines.join('')}<div class="conflict-help">You can still save — conflicts are sometimes intentional (e.g., overlapping shoots with an assistant).</div>`;
+  warn.classList.add('active');
 }
 
 async function saveBooking() {
@@ -3250,11 +4180,12 @@ function editBooking(idx) {
     document.getElementById('shootTime').value = `${String(hr).padStart(2,'0')}:${mn}`;
   }
   document.getElementById('shootDuration').value = b.duration || '1 hour';
-  document.getElementById('shootType').value = b.type || 'Portrait';
+  populateShootTypeSelect(b.type || 'Portrait');
   document.getElementById('shootReminder').value = b.reminder || '';
   document.getElementById('shootNotes').value = b.notes || '';
   document.getElementById('formTitle').textContent = 'Edit Shoot';
   document.getElementById('saveBtn').textContent = 'Update Booking';
+  updateConflictWarning();
   setTimeout(() => form.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
 }
 

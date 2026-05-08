@@ -2317,7 +2317,11 @@ function clearDriveAuth(reason) {
    The user signs in once; token is cached in localStorage with expiry.
    File: appDataFolder/moments-by-mia-bookings.json (private to this app)
    ============================================================ */
-const GOOGLE_CLIENT_ID = ''; // ← Mia fills this in; instructions printed in console below
+// NOTE FOR HANDOFF TO MIA: This is currently set to the dry-run Client ID
+// from whawley98's Google Cloud project. When deploying for Mia, replace with
+// her own Client ID (created in her own Google Cloud project, with her domain
+// in Authorized JavaScript origins). See setup instructions in console below.
+const GOOGLE_CLIENT_ID = '305943807304-cchvc059pi7vitnshh0itiv2kod4i7he.apps.googleusercontent.com';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
 const DRIVE_FILENAME = 'moments-by-mia-bookings.json';
 

@@ -1820,6 +1820,9 @@ body {
       <button class="menu-item" onclick="document.getElementById('importFile').click();closeMainMenu()">
         <span class="menu-icon">⤒</span> Restore from Backup
       </button>
+      <button class="menu-item" onclick="resetDriveSync();closeMainMenu()">
+        <span class="menu-icon">⟲</span> Reset Drive Sync
+      </button>
       <div class="menu-divider"></div>
       <div class="menu-section-label">Calendar</div>
       <button class="menu-item" onclick="exportICS();closeMainMenu()">
@@ -2267,7 +2270,7 @@ async function saveBookings({ syncToCloud = true } = {}) {
 function updateSyncPill(state) {
   const pill = document.getElementById('syncPill');
   const text = document.getElementById('syncText');
-  pill.classList.remove('syncing', 'synced', 'error', 'updated', 'expired');
+  pill.classList.remove('syncing', 'synced', 'error', 'updated', 'expired', 'orphan');
   pill.style.cursor = '';
   pill.onclick = null;
   if (state === 'syncing') {
@@ -2288,6 +2291,11 @@ function updateSyncPill(state) {
     text.textContent = 'Sign-in expired — tap to reconnect';
     pill.style.cursor = 'pointer';
     pill.onclick = () => connectGoogleDrive();
+  } else if (state === 'orphan') {
+    pill.classList.add('expired'); // reuse expired styling (pink-deep, attention-grabbing)
+    text.textContent = 'Sync file needs reset — tap for help';
+    pill.style.cursor = 'pointer';
+    pill.onclick = () => resetDriveSync();
   } else if (state === 'error') {
     pill.classList.add('error');
     text.textContent = 'Sync failed — saved locally';
@@ -2309,6 +2317,52 @@ function clearDriveAuth(reason) {
   updateSyncPill('expired');
   updateMenuStatuses();
   if (reason) console.warn('Drive auth cleared:', reason);
+}
+
+// Recovery: nuke the orphan Drive file, clear local Drive state, and prompt
+// reconnect. Used when the appdata file has gotten into a per-file ACL state
+// where the current OAuth context can't write to it (403 appNotAuthorizedToFile).
+// Local bookings stay intact — only Drive state is reset.
+async function resetDriveSync() {
+  const ok = confirm(
+    'Reset Drive Sync will:\n\n' +
+    '• Delete the existing sync file from Google Drive\n' +
+    '• Disconnect this device from Drive\n' +
+    '• Keep all your bookings safe on this device\n\n' +
+    'Use this if sync is failing with permission errors. ' +
+    'After reset, you can reconnect Drive and a fresh sync file will be created.\n\n' +
+    'Continue?'
+  );
+  if (!ok) return;
+
+  // Best-effort: try to delete the orphan file. Don't fail the reset if it errors —
+  // the file's appNotAuthorizedToFile state may even prevent its own deletion.
+  if (driveFileId && driveToken) {
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${driveToken}` }
+      });
+      console.log('Drive: orphan file deletion attempted');
+    } catch (e) {
+      console.warn('Drive: could not delete orphan file (may be already inaccessible):', e);
+    }
+  }
+
+  // Wipe all Drive-related local state (but NOT bookings or shoot types)
+  driveToken = null;
+  driveFileId = null;
+  lastSyncedAt = null;
+  try {
+    localStorage.removeItem(DRIVE_TOKEN_KEY);
+    localStorage.removeItem(DRIVE_FILE_KEY);
+    localStorage.removeItem(LAST_SYNCED_KEY);
+  } catch (e) {}
+  stopPolling();
+  updateSyncPill();
+  updateMenuStatuses();
+
+  showToast('Drive sync reset — tap Connect Google Drive to set up fresh sync', '', 5000);
 }
 
 /* ============================================================
@@ -2337,24 +2391,16 @@ function loadGoogleScript() {
   });
 }
 
-// Track whether a silent re-auth attempt is currently in flight, so we don't
-// fire multiple parallel attempts (each 401 from the polling loop would otherwise
-// trigger one).
-let silentReauthInProgress = false;
-// Cached OAuth client — created once and reused for both interactive and
-// silent token requests.
-let oauthClient = null;
-
-// Acquire a Drive access token. Returns a Promise that resolves with the
-// new token (and stores it) or rejects on failure. `silent: true` attempts
-// to renew without showing UI; `silent: false` (default) shows the popup.
-function requestDriveToken({ silent = false } = {}) {
+// Acquire a Drive access token via OAuth. Always shows the consent popup —
+// silent re-auth was removed because it caused per-file authorization
+// mismatches (403 appNotAuthorizedToFile) on the appdata file. The user
+// taps the expired pill to reconnect; one extra tap once an hour is the
+// price of stability.
+function requestDriveToken() {
   return new Promise((resolve, reject) => {
     if (!GOOGLE_CLIENT_ID) { reject(new Error('No Client ID configured')); return; }
     try {
-      // Build/refresh the client. We rebuild every call because the callback
-      // is per-call (we want this Promise's resolve/reject hooked in).
-      oauthClient = google.accounts.oauth2.initTokenClient({
+      const client = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: DRIVE_SCOPE,
         callback: (resp) => {
@@ -2370,37 +2416,11 @@ function requestDriveToken({ silent = false } = {}) {
           reject(new Error((err && err.type) || 'auth_error'));
         }
       });
-      // `prompt: ''` = silent attempt (no UI). Default = show consent/sign-in.
-      // 'none' is the official OAuth name for silent; Google Identity Services
-      // uses an empty string to mean the same thing.
-      oauthClient.requestAccessToken(silent ? { prompt: '' } : {});
+      client.requestAccessToken();
     } catch (e) {
       reject(e);
     }
   });
-}
-
-// Try to renew the token silently in the background. If successful, sync resumes
-// invisibly. If it fails, surface the 'expired' pill so the user can reconnect.
-// Called automatically when a 401 is detected in driveFetch.
-async function attemptSilentReauth() {
-  if (silentReauthInProgress) return false;
-  if (!GOOGLE_CLIENT_ID) return false;
-  silentReauthInProgress = true;
-  try {
-    await loadGoogleScript();
-    await requestDriveToken({ silent: true });
-    // Success — token is now refreshed
-    console.log('Drive: silent re-auth succeeded');
-    startPolling();
-    updateSyncPill();
-    return true;
-  } catch (e) {
-    console.log('Drive: silent re-auth failed (' + (e && e.message) + ') — user will need to tap Reconnect');
-    return false;
-  } finally {
-    silentReauthInProgress = false;
-  }
 }
 
 async function connectGoogleDrive() {
@@ -2428,7 +2448,7 @@ async function connectGoogleDrive() {
   }
   try {
     await loadGoogleScript();
-    await requestDriveToken({ silent: false });
+    await requestDriveToken();
     showToast('Connected to Google Drive');
     // First-time connect: pull existing data from Drive (merging with any
     // local data already entered), then push the merged state up
@@ -2447,31 +2467,34 @@ async function connectGoogleDrive() {
   }
 }
 
-// Wraps fetch for Drive API calls. Detects 401 (token expired/revoked).
-// On 401: first tries a silent re-auth. If silent succeeds, retries the
-// original request with the new token. If silent fails, clears auth state
-// so the user sees the "Sign-in expired" pill and can tap to reconnect.
-async function driveFetch(url, options = {}, _retry = false) {
+// Wraps fetch for Drive API calls. Detects 401 (token expired/revoked)
+// and clears auth state so the user sees the "Sign-in expired" pill
+// and can tap to reconnect. Also detects 403 appNotAuthorizedToFile and
+// flags the file as orphaned so the recovery flow can clean it up.
+async function driveFetch(url, options = {}) {
   const r = await fetch(url, options);
-  if (r.status === 401 && !_retry) {
-    // Try silent re-auth. If it works, redo the call with the new token.
-    const renewed = await attemptSilentReauth();
-    if (renewed) {
-      // Update the Authorization header with the freshly-issued token and retry
-      const newOpts = { ...options };
-      if (newOpts.headers) {
-        newOpts.headers = { ...newOpts.headers, Authorization: `Bearer ${driveToken}` };
-      }
-      return await driveFetch(url, newOpts, true);
-    }
-    // Silent re-auth failed — surface the expired state
-    clearDriveAuth('401 from ' + url.split('?')[0] + ' (silent re-auth failed)');
+  if (r.status === 401) {
+    clearDriveAuth('401 from ' + url.split('?')[0]);
     throw new Error('Drive auth expired');
   }
-  if (r.status === 401 && _retry) {
-    // Already retried once and still 401 — give up
-    clearDriveAuth('401 after retry');
-    throw new Error('Drive auth expired');
+  if (r.status === 403) {
+    // Read body to see if it's the appNotAuthorizedToFile case (orphan file).
+    // Clone first so the caller can still consume the body if it wants.
+    try {
+      const errBody = await r.clone().json();
+      const reason = errBody && errBody.error && errBody.error.errors
+        && errBody.error.errors[0] && errBody.error.errors[0].reason;
+      if (reason === 'appNotAuthorizedToFile' || reason === 'forbidden') {
+        // File is orphaned — current OAuth context can't write to it.
+        // Mark it for the recovery UI; don't auto-delete (let user trigger).
+        console.warn('Drive: file is orphaned (' + reason + '). Use Tools → Reset Drive Sync.');
+        updateSyncPill('orphan');
+        throw new Error('Drive file orphaned');
+      }
+    } catch (e) {
+      if (e.message === 'Drive file orphaned') throw e;
+      // body wasn't JSON or didn't match — fall through
+    }
   }
   return r;
 }
@@ -2677,8 +2700,8 @@ async function syncToDrive() {
     localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
     updateSyncPill();
   } catch(e) {
-    if (e && e.message === 'Drive auth expired') {
-      // clearDriveAuth already set the pill to 'expired' — leave it
+    if (e && (e.message === 'Drive auth expired' || e.message === 'Drive file orphaned')) {
+      // pill state already set by driveFetch — don't override
     } else {
       console.warn('Drive sync error', e);
       updateSyncPill('error');
@@ -2721,8 +2744,8 @@ async function checkForUpdates({ silent = false } = {}) {
     if (!silent) updateSyncPill();
     return false;
   } catch(e) {
-    // If 401 already cleared auth, the pill is now showing 'expired' — don't override
-    if (e && e.message === 'Drive auth expired') {
+    // If 401/orphan already set the pill, don't override
+    if (e && (e.message === 'Drive auth expired' || e.message === 'Drive file orphaned')) {
       return false;
     }
     console.warn('Drive update check error', e);
@@ -2733,40 +2756,22 @@ async function checkForUpdates({ silent = false } = {}) {
   }
 }
 
-// Background polling — every 60s while the tab is visible
-// Check if our access token is close to expiring. If so, kick off a silent
-// re-auth so the renewal completes BEFORE the next API call would 401.
-async function refreshTokenIfNearExpiry() {
-  try {
-    const raw = localStorage.getItem(DRIVE_TOKEN_KEY);
-    if (!raw) return;
-    const t = JSON.parse(raw);
-    const msRemaining = t.expiresAt - Date.now();
-    // 5 minute buffer — refresh once we're within 5 min of expiry
-    if (msRemaining < 5 * 60 * 1000 && msRemaining > -60 * 1000) {
-      await attemptSilentReauth();
-    }
-  } catch(e) {}
-}
-
+// Background polling — every 60s while the tab is visible.
+// On 401, driveFetch will detect and surface the expired state.
 function startPolling() {
   stopPolling();
   if (!driveToken) return;
-  pollTimer = setInterval(async () => {
-    if (document.hidden) return;
-    // Proactively renew if we're nearing token expiry
-    await refreshTokenIfNearExpiry();
-    checkForUpdates({ silent: true });
+  pollTimer = setInterval(() => {
+    if (!document.hidden) checkForUpdates({ silent: true });
   }, 60000);
 }
 function stopPolling() {
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
 }
 
-// When tab regains focus, do an immediate check (and renew if needed)
-document.addEventListener('visibilitychange', async () => {
+// When tab regains focus, do an immediate check
+document.addEventListener('visibilitychange', () => {
   if (!document.hidden && driveToken) {
-    await refreshTokenIfNearExpiry();
     checkForUpdates({ silent: true });
   }
 });

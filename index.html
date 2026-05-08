@@ -155,6 +155,13 @@ body {
   height: 1px; background: rgba(15, 29, 58, 0.08);
   margin: 8px 0;
 }
+.menu-version {
+  padding: 6px 18px 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--navy-soft); opacity: 0.55;
+  text-align: center;
+}
 .menu-item {
   display: flex; align-items: center; gap: 10px;
   width: 100%; padding: 12px 18px;
@@ -299,15 +306,23 @@ body {
 .month-card {
   background: white; border-radius: 4px;
   box-shadow: var(--shadow-soft); overflow: hidden;
-  cursor: pointer; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(15, 29, 58, 0.05); position: relative;
 }
-.month-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
-.month-card:hover .month-header { background: var(--navy-deep); }
+.month-card:hover { box-shadow: var(--shadow); }
+
+/* Header is clickable: zoom into that month */
+.month-header.is-clickable {
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+.month-header.is-clickable:hover {
+  background: var(--navy-deep);
+}
+
 .month-header {
   background: var(--navy); color: white;
   padding: 22px 26px; position: relative;
-  transition: background 0.3s ease;
 }
 .month-header::after {
   content: ''; position: absolute; bottom: 0;
@@ -336,6 +351,15 @@ body {
   aspect-ratio: 1; display: flex; align-items: center;
   justify-content: center; font-size: 11px; color: var(--ink);
   border-radius: 2px; position: relative;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.day-cell.is-clickable { cursor: pointer; }
+.day-cell.is-clickable:hover {
+  background: var(--cream);
+  transform: scale(1.1);
+}
+.day-cell.is-clickable.has-shoot:hover {
+  background: var(--pink-blush);
 }
 .day-cell.empty { color: transparent; }
 .day-cell.has-shoot {
@@ -1031,6 +1055,49 @@ body {
 .form-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
+
+/* Custom time picker — Google-Calendar-style searchable dropdown */
+.time-picker {
+  position: relative;
+}
+.time-picker-input {
+  /* Inherits .form-input styling — no overrides needed */
+  cursor: pointer;
+}
+.time-picker-dropdown {
+  display: none;
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: white;
+  border: 1px solid rgba(15, 29, 58, 0.15);
+  border-radius: 2px;
+  box-shadow: var(--shadow);
+  max-height: 280px; overflow-y: auto;
+  z-index: 60;
+}
+.time-picker-dropdown.open { display: block; }
+.time-option {
+  padding: 10px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; color: var(--navy);
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border-bottom: 1px solid rgba(15, 29, 58, 0.04);
+}
+.time-option:last-child { border-bottom: none; }
+.time-option:hover, .time-option.highlighted {
+  background: var(--pink-soft);
+  color: var(--navy);
+}
+.time-option.selected {
+  background: var(--cream);
+  font-weight: 500;
+}
+.time-picker-empty {
+  padding: 14px; text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; color: var(--navy-soft);
+  font-size: 14px;
+}
 .btn-save {
   width: 100%; margin-top: 8px; padding: 16px;
   background: var(--navy); color: var(--pink-soft); border: none;
@@ -1121,6 +1188,12 @@ body {
 .foot-text {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic; color: var(--navy-soft); font-size: 15px;
+}
+.foot-version {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--navy-soft); opacity: 0.5;
+  margin-top: 8px;
 }
 .foot-decoration {
   display: flex; align-items: center; justify-content: center;
@@ -1246,6 +1319,9 @@ body {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 14px; position: relative; z-index: 2; gap: 8px;
   flex-wrap: wrap;
+}
+.agenda-nav-left {
+  display: flex; gap: 8px; flex-wrap: wrap;
 }
 .agenda-title {
   font-family: 'Cormorant Garamond', serif;
@@ -1841,6 +1917,8 @@ body {
       <button class="menu-item" onclick="openShootTypesModal();closeMainMenu()">
         <span class="menu-icon">🎨</span> Manage Shoot Types
       </button>
+      <div class="menu-divider"></div>
+      <div class="menu-version" id="menuVersion"></div>
     </div>
   </div>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
@@ -1885,7 +1963,10 @@ body {
 <div class="agenda-view" id="agendaView">
   <div class="agenda-header">
     <div class="agenda-nav">
-      <button class="nav-btn" onclick="showAllMonths()">← All Months</button>
+      <div class="agenda-nav-left">
+        <button class="nav-btn" onclick="showAllMonths()">← All Months</button>
+        <button class="nav-btn" id="agendaBackToMonth" onclick="backToMonthFromAgenda()" style="margin-left:8px;display:none">Back to Month</button>
+      </div>
       <div>
         <button class="nav-btn" onclick="navigateAgenda(-1)">← Prev Week</button>
         <button class="nav-btn" onclick="navigateAgenda(1)" style="margin-left:8px">Next Week →</button>
@@ -2007,7 +2088,16 @@ body {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Time</label>
-            <input type="time" class="form-input" id="shootTime" step="900" onchange="updateConflictWarning()">
+            <div class="time-picker" id="timePickerWrap">
+              <input type="text" class="form-input time-picker-input" id="shootTime"
+                     placeholder="e.g. 10:00 AM"
+                     autocomplete="off" inputmode="text"
+                     onfocus="openTimePicker()"
+                     oninput="onTimePickerInput(event)"
+                     onblur="onTimePickerBlur(event)"
+                     onkeydown="onTimePickerKeydown(event)">
+              <div class="time-picker-dropdown" id="timePickerDropdown"></div>
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Duration</label>
@@ -2078,6 +2168,7 @@ body {
 <footer class="foot">
   <div class="foot-decoration">✦</div>
   <p class="foot-text">Every moment matters · Every memory lasts forever</p>
+  <p class="foot-version" id="footVersion"></p>
 </footer>
 
 <script>
@@ -2085,6 +2176,10 @@ body {
    STATE
    ============================================================ */
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// App version — bumped on every build. Surfaces in footer, Tools menu, and console.
+const APP_VERSION = '10';
+const APP_BUILD_DATE = '2026-05-08';
 // Curated brand-compatible color palette for shoot types.
 // 24 swatches across 4 rows; users pick from these when editing types.
 const SHOOT_TYPE_PALETTE = [
@@ -3048,7 +3143,7 @@ function renderGrid() {
   MONTHS.forEach((name, idx) => {
     const card = document.createElement('div');
     card.className = 'month-card';
-    card.onclick = () => showMonth(idx);
+    // Note: no card.onclick — clicks are split between header and individual dates
 
     const totalDays = daysInMonth(YEAR, idx);
     const firstDay = firstDayOfMonth(YEAR, idx);
@@ -3070,14 +3165,16 @@ function renderGrid() {
       shootCount += activeItems.length;
       const cls = [
         'day-cell',
+        'is-clickable',
         hasBookings ? 'has-shoot' : '',
         blocked ? 'is-blocked' : '',
         key === today ? 'is-today' : ''
       ].filter(Boolean).join(' ');
-      daysHTML += `<div class="${cls}">${d}</div>`;
+      // data-key drives the click handler; onclick added via delegation below
+      daysHTML += `<div class="${cls}" data-key="${key}">${d}</div>`;
     }
     card.innerHTML = `
-      <div class="month-header">
+      <div class="month-header is-clickable" data-month="${idx}">
         <div class="month-name">${name}</div>
         <div class="month-meta">Month ${String(idx+1).padStart(2,'0')} · ${YEAR}</div>
       </div>
@@ -3086,6 +3183,20 @@ function renderGrid() {
         <div class="shoot-count">${shootCount} ${shootCount === 1 ? 'Shoot' : 'Shoots'} Booked</div>
       </div>
     `;
+
+    // Header click → zoom into that month's detail view
+    const header = card.querySelector('.month-header');
+    if (header) header.onclick = () => showMonth(idx);
+
+    // Each date cell click → open day modal for that date
+    card.querySelectorAll('.day-cell.is-clickable').forEach(cell => {
+      cell.onclick = (e) => {
+        e.stopPropagation();
+        const key = cell.getAttribute('data-key');
+        if (key) openModal(key);
+      };
+    });
+
     grid.appendChild(card);
   });
 }
@@ -3167,6 +3278,19 @@ function navigateMonth(direction) {
 function navigateAgenda(direction) {
   agendaAnchor = addDays(agendaAnchor, direction * 7);
   renderAgenda();
+}
+
+// Back to Month from week view. Uses the primary month dataset value
+// computed and stored on the button by renderAgenda().
+function backToMonthFromAgenda() {
+  const btn = document.getElementById('agendaBackToMonth');
+  if (!btn) return;
+  const m = parseInt(btn.dataset.month);
+  if (isNaN(m) || m < 0 || m > 11) {
+    showAllMonths();
+    return;
+  }
+  showMonth(m);
 }
 
 function changeYear(delta) {
@@ -3319,6 +3443,33 @@ function renderAgenda() {
   else title.textContent = `Week of ${formatDateShort(start)}`;
 
   range.textContent = `${formatDateShort(start)} — ${formatDateShort(end)}, ${end.getFullYear()}`;
+
+  // Compute the "primary month" for this week: count days falling in each
+  // month, take whichever has more. Tie goes to the start week's month.
+  const monthCounts = {};
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(start, i);
+    const m = d.getMonth();
+    monthCounts[m] = (monthCounts[m] || 0) + 1;
+  }
+  let primaryMonth = start.getMonth();
+  let maxCount = 0;
+  Object.entries(monthCounts).forEach(([m, c]) => {
+    if (c > maxCount) { maxCount = c; primaryMonth = parseInt(m); }
+  });
+
+  // Show "Back to {MonthName}" button only if the primary month falls in
+  // our currently-displayed YEAR (otherwise it'd be confusing).
+  const backBtn = document.getElementById('agendaBackToMonth');
+  if (backBtn) {
+    if (start.getFullYear() === YEAR) {
+      backBtn.textContent = `← Back to ${MONTHS[primaryMonth]}`;
+      backBtn.style.display = '';
+      backBtn.dataset.month = primaryMonth;
+    } else {
+      backBtn.style.display = 'none';
+    }
+  }
 
   const todayKeyStr = todayKey();
 
@@ -4150,6 +4301,217 @@ function formatDurationMinutes(mins) {
   return `${hrs} hr ${min} min`;
 }
 
+/* ============================================================
+   TIME PICKER (Google-Calendar-style)
+   Single text input with dropdown of 15-min options.
+   Free-form typing accepted — picker is just convenience.
+   Stores AND displays in "10:00 AM" format (matches the rest of the app).
+   ============================================================ */
+
+// Build the master list of 15-min options once
+const TIME_OPTIONS_15MIN = (() => {
+  const out = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m of [0, 15, 30, 45]) {
+      out.push(formatMinutesToTime(h * 60 + m));
+    }
+  }
+  return out;
+})();
+
+let timePickerHighlightedIdx = -1;
+
+// Open the dropdown — show all options, scroll to current value if any
+function openTimePicker() {
+  const input = document.getElementById('shootTime');
+  const drop = document.getElementById('timePickerDropdown');
+  if (!input || !drop) return;
+  renderTimePickerOptions(input.value);
+  drop.classList.add('open');
+  // Scroll to current value if it's in the list
+  const current = input.value.trim();
+  if (current) {
+    const matchIdx = TIME_OPTIONS_15MIN.findIndex(t => t.toLowerCase() === current.toLowerCase());
+    if (matchIdx >= 0) {
+      const optEl = drop.children[matchIdx];
+      if (optEl) optEl.scrollIntoView({ block: 'center' });
+    }
+  }
+}
+
+function closeTimePicker() {
+  const drop = document.getElementById('timePickerDropdown');
+  if (drop) drop.classList.remove('open');
+  timePickerHighlightedIdx = -1;
+}
+
+// Render the options. If filterStr matches no options, the dropdown shows
+// a friendly "press enter to use this exact time" message.
+function renderTimePickerOptions(filterStr) {
+  const drop = document.getElementById('timePickerDropdown');
+  if (!drop) return;
+  const filter = (filterStr || '').toLowerCase().trim();
+  const filtered = filter
+    ? TIME_OPTIONS_15MIN.filter(t => t.toLowerCase().includes(filter))
+    : TIME_OPTIONS_15MIN;
+  if (filtered.length === 0) {
+    drop.innerHTML = `<div class="time-picker-empty">No matching 15-min option — press Enter to use your typed time</div>`;
+    timePickerHighlightedIdx = -1;
+    return;
+  }
+  const currentVal = (document.getElementById('shootTime').value || '').toLowerCase();
+  drop.innerHTML = filtered.map((t, i) => {
+    const sel = t.toLowerCase() === currentVal ? ' selected' : '';
+    return `<div class="time-option${sel}" data-time="${t}" onmousedown="pickTimeOption(event, '${t}')">${t}</div>`;
+  }).join('');
+  timePickerHighlightedIdx = -1;
+}
+
+// Picked from dropdown via mouse — set value, close, fire change
+function pickTimeOption(e, value) {
+  e.preventDefault(); // prevents blur from interfering
+  const input = document.getElementById('shootTime');
+  input.value = value;
+  closeTimePicker();
+  input.focus();
+  updateConflictWarning();
+}
+
+// Live filtering as user types
+function onTimePickerInput(e) {
+  renderTimePickerOptions(e.target.value);
+  // Make sure dropdown is open while typing
+  const drop = document.getElementById('timePickerDropdown');
+  if (drop) drop.classList.add('open');
+  updateConflictWarning();
+}
+
+// Keyboard navigation: arrows to move highlight, Enter to commit, Esc to close
+function onTimePickerKeydown(e) {
+  const drop = document.getElementById('timePickerDropdown');
+  if (!drop || !drop.classList.contains('open')) {
+    // Reopen on arrow keys
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      openTimePicker();
+      e.preventDefault();
+    }
+    return;
+  }
+  const opts = drop.querySelectorAll('.time-option');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    timePickerHighlightedIdx = Math.min(timePickerHighlightedIdx + 1, opts.length - 1);
+    updateTimePickerHighlight(opts);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    timePickerHighlightedIdx = Math.max(timePickerHighlightedIdx - 1, 0);
+    updateTimePickerHighlight(opts);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (timePickerHighlightedIdx >= 0 && opts[timePickerHighlightedIdx]) {
+      // Commit the highlighted option
+      const value = opts[timePickerHighlightedIdx].getAttribute('data-time');
+      e.target.value = value;
+    } else {
+      // No highlight — keep typed value, just normalize it
+      const normalized = normalizeTimeInput(e.target.value);
+      if (normalized) e.target.value = normalized;
+    }
+    closeTimePicker();
+    updateConflictWarning();
+  } else if (e.key === 'Escape') {
+    closeTimePicker();
+  } else if (e.key === 'Tab') {
+    // Let tab work naturally; closeTimePicker handled by blur
+  }
+}
+
+function updateTimePickerHighlight(opts) {
+  opts.forEach((o, i) => o.classList.toggle('highlighted', i === timePickerHighlightedIdx));
+  if (opts[timePickerHighlightedIdx]) {
+    opts[timePickerHighlightedIdx].scrollIntoView({ block: 'nearest' });
+  }
+}
+
+// On blur: normalize the typed value if possible. If the user typed something
+// unparseable, leave it alone — they may know what they're doing or may correct it.
+function onTimePickerBlur(e) {
+  // Small delay so click events on dropdown options can fire first
+  setTimeout(() => {
+    closeTimePicker();
+    const raw = e.target.value.trim();
+    if (!raw) return; // empty is fine
+    const normalized = normalizeTimeInput(raw);
+    if (normalized) {
+      e.target.value = normalized;
+      updateConflictWarning();
+    }
+  }, 150);
+}
+
+// Try to parse user-typed time into a clean "10:00 AM" format.
+// Accepts: "10:00", "10am", "10 am", "10:30pm", "10:30 PM", "1015", "10:00 AM"
+// Returns the normalized string or null if unparseable.
+function normalizeTimeInput(raw) {
+  if (!raw) return null;
+  let s = String(raw).trim().toUpperCase().replace(/\s+/g, '');
+  // Pattern 1: "10:30AM", "10:30PM", "10:30" (assume AM if no period)
+  let m = s.match(/^(\d{1,2}):?(\d{2})(AM|PM|A|P)?$/);
+  if (m) {
+    let hr = parseInt(m[1]);
+    const mn = parseInt(m[2]);
+    let ap = m[3];
+    if (mn < 0 || mn > 59) return null;
+    if (ap === 'A') ap = 'AM'; if (ap === 'P') ap = 'PM';
+    if (!ap) {
+      // Assume sensible default: 1-7 → PM (afternoon), 8-12 → AM
+      // unless 0/13+ which forces 24-hr interpretation
+      if (hr === 0) { hr = 12; ap = 'AM'; }
+      else if (hr >= 13 && hr <= 23) { hr = hr - 12; ap = 'PM'; }
+      else if (hr >= 1 && hr <= 7) ap = 'PM';
+      else ap = 'AM';
+    }
+    if (hr < 1 || hr > 12) {
+      if (hr === 0) hr = 12;
+      else if (hr >= 13 && hr <= 23) hr = hr - 12;
+      else return null;
+    }
+    return `${hr}:${String(mn).padStart(2,'0')} ${ap}`;
+  }
+  // Pattern 2: "10AM", "10 PM", "10A", "10P" — no minutes
+  m = s.match(/^(\d{1,2})(AM|PM|A|P)$/);
+  if (m) {
+    let hr = parseInt(m[1]);
+    let ap = m[2];
+    if (ap === 'A') ap = 'AM'; if (ap === 'P') ap = 'PM';
+    if (hr < 1 || hr > 12) {
+      if (hr === 0) hr = 12;
+      else if (hr >= 13 && hr <= 23) { hr = hr - 12; ap = 'PM'; }
+      else return null;
+    }
+    return `${hr}:00 ${ap}`;
+  }
+  // Pattern 3: just a number "10" → 10:00 AM (or PM by heuristic)
+  m = s.match(/^(\d{1,2})$/);
+  if (m) {
+    let hr = parseInt(m[1]);
+    let ap;
+    if (hr === 0) { hr = 12; ap = 'AM'; }
+    else if (hr >= 13 && hr <= 23) { hr = hr - 12; ap = 'PM'; }
+    else if (hr >= 1 && hr <= 7) ap = 'PM';
+    else ap = 'AM';
+    if (hr < 1 || hr > 12) return null;
+    return `${hr}:00 ${ap}`;
+  }
+  return null;
+}
+
+// Click outside the picker closes it
+document.addEventListener('mousedown', e => {
+  const wrap = document.getElementById('timePickerWrap');
+  if (wrap && !wrap.contains(e.target)) closeTimePicker();
+});
+
 // Populate the Shoot Type dropdown from the managed shootTypes list.
 // `selectedValue` lets the caller restore a previously-chosen value
 // (e.g., when editing an existing booking).
@@ -4211,15 +4573,21 @@ function findConflicts(dateKey, startMin, endMin, excludeIdx) {
 function updateConflictWarning() {
   const warn = document.getElementById('conflictWarning');
   if (!warn) return;
-  const time = document.getElementById('shootTime').value;
+  const rawTime = (document.getElementById('shootTime').value || '').trim();
   const duration = document.getElementById('shootDuration').value;
-  if (!time || !currentDateKey) {
+  if (!rawTime || !currentDateKey) {
     warn.classList.remove('active');
     warn.innerHTML = '';
     return;
   }
-  const [h, mn] = time.split(':');
-  const startMin = parseInt(h) * 60 + parseInt(mn);
+  // Try to normalize the input — if it doesn't parse, skip warning silently
+  const normalizedTime = normalizeTimeInput(rawTime) || rawTime;
+  const startMin = parseTimeToMinutes(normalizedTime);
+  if (startMin == null) {
+    warn.classList.remove('active');
+    warn.innerHTML = '';
+    return;
+  }
   const durMin = parseDurationToMinutes(duration);
   const endMin = startMin + durMin;
 
@@ -4242,20 +4610,22 @@ async function saveBooking() {
   const name = document.getElementById('clientName').value.trim();
   const phone = document.getElementById('clientPhone').value.trim();
   const email = document.getElementById('clientEmail').value.trim();
-  const time = document.getElementById('shootTime').value;
+  const rawTime = document.getElementById('shootTime').value.trim();
   const duration = document.getElementById('shootDuration').value;
   const type = document.getElementById('shootType').value;
   const reminder = document.getElementById('shootReminder').value;
   const notes = document.getElementById('shootNotes').value.trim();
 
   if (!name) { showToast('Client name required', 'error'); return; }
-  if (!time) { showToast('Shoot time required', 'error'); return; }
+  if (!rawTime) { showToast('Shoot time required', 'error'); return; }
 
-  const [h, mn] = time.split(':');
-  const hour = parseInt(h);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12;
-  const formattedTime = `${hour12}:${mn} ${ampm}`;
+  // Normalize the time. The user may have typed something un-normalized
+  // (e.g., "10am" without blurring), or the picker put a clean value in.
+  const formattedTime = normalizeTimeInput(rawTime);
+  if (!formattedTime) {
+    showToast('Time format not recognized — try "10:00 AM"', 'error');
+    return;
+  }
 
   if (!bookings[currentDateKey]) bookings[currentDateKey] = { items: [], blocked: false };
   if (!bookings[currentDateKey].items) bookings[currentDateKey].items = [];
@@ -4323,14 +4693,8 @@ function editBooking(idx) {
   document.getElementById('clientName').value = b.name || '';
   document.getElementById('clientPhone').value = b.phone || '';
   document.getElementById('clientEmail').value = b.email || '';
-  const match = (b.time || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (match) {
-    let hr = parseInt(match[1]); const mn = match[2];
-    const ap = match[3].toUpperCase();
-    if (ap === 'PM' && hr !== 12) hr += 12;
-    if (ap === 'AM' && hr === 12) hr = 0;
-    document.getElementById('shootTime').value = `${String(hr).padStart(2,'0')}:${mn}`;
-  }
+  // Time stored in formatted form (e.g. "10:00 AM") matches the picker input format
+  document.getElementById('shootTime').value = b.time || '';
   document.getElementById('shootDuration').value = b.duration || '1 hour';
   populateShootTypeSelect(b.type || 'Portrait');
   document.getElementById('shootReminder').value = b.reminder || '';
@@ -5191,6 +5555,14 @@ document.addEventListener('keydown', e => {
 });
 
 (async function init() {
+  console.log(
+    `%cMoments by Mia · v${APP_VERSION} · ${APP_BUILD_DATE}`,
+    'background:#0f1d3a;color:#f4c2c2;padding:6px 12px;font-family:serif;font-style:italic;font-size:14px;border-radius:2px'
+  );
+  const fv = document.getElementById('footVersion');
+  if (fv) fv.textContent = `Version ${APP_VERSION} · ${APP_BUILD_DATE}`;
+  const mv = document.getElementById('menuVersion');
+  if (mv) mv.textContent = `v${APP_VERSION} · ${APP_BUILD_DATE}`;
   document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
   await loadBookings();
 

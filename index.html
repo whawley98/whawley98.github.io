@@ -12,6 +12,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&amp;family=Outfit:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzBmMWQzYSIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgZm9udC1mYW1pbHk9IkNvcm1vcmFudCBHYXJhbW9uZCxzZXJpZiIgZm9udC1zaXplPSI2MCIgZm9udC1zdHlsZT0iaXRhbGljIiBmaWxsPSIjZjRjMmMyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NPC90ZXh0Pjwvc3ZnPg==">
+
+<!-- Firebase SDK (compat libraries — work with classic scripts, expose a global `firebase` object) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --navy: #0f1d3a;
@@ -272,6 +277,7 @@ body {
 .sync-pill.syncing { color: var(--gold); }
 .sync-pill.synced { color: var(--navy-soft); }
 .sync-pill.error { color: var(--pink-deep); }
+.sync-pill.offline { color: var(--navy-soft); font-style: italic; }
 .sync-pill.updated { color: var(--gold); font-weight: 500; }
 .sync-pill.expired {
   color: var(--pink-deep); font-weight: 500;
@@ -1885,19 +1891,16 @@ body {
     </button>
     <div class="menu-dropdown" id="mainMenu">
       <div class="menu-section-label">Backup &amp; Sync</div>
-      <button class="menu-item" onclick="connectGoogleDrive();closeMainMenu()" id="driveMenuItem">
+      <button class="menu-item" onclick="handleAuthMenuClick();closeMainMenu()" id="authMenuItem">
         <span class="menu-icon">☁</span>
-        <span class="menu-label">Connect Google Drive</span>
-        <span class="menu-status" id="driveStatus"></span>
+        <span class="menu-label" id="authMenuLabel">Sign in with Google</span>
+        <span class="menu-status" id="authMenuStatus"></span>
       </button>
       <button class="menu-item" onclick="exportJSON();closeMainMenu()">
         <span class="menu-icon">⤓</span> Download Backup
       </button>
       <button class="menu-item" onclick="document.getElementById('importFile').click();closeMainMenu()">
         <span class="menu-icon">⤒</span> Restore from Backup
-      </button>
-      <button class="menu-item" onclick="resetDriveSync();closeMainMenu()">
-        <span class="menu-icon">⟲</span> Reset Drive Sync
       </button>
       <div class="menu-divider"></div>
       <div class="menu-section-label">Calendar</div>
@@ -2178,7 +2181,7 @@ body {
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 // App version — bumped on every build. Surfaces in footer, Tools menu, and console.
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 const APP_BUILD_DATE = '2026-05-08';
 // Curated brand-compatible color palette for shoot types.
 // 24 swatches across 4 rows; users pick from these when editing types.
@@ -2234,14 +2237,6 @@ let bookings = {}; // { "YYYY-MM-DD": { blocked: bool, items: [{...}] } }
 let currentMonth = new Date().getMonth();
 let currentDateKey = null;
 let editingIndex = null;
-let driveToken = null;
-let driveFileId = null;
-let saveDebounce = null;
-// Sync state for auto-refresh
-let lastSyncedAt = null;        // ISO timestamp of the Drive copy we last read
-let syncInProgress = false;      // lock to prevent overlapping sync ops
-let pendingSave = false;         // queued save while sync is running
-let pollTimer = null;            // setInterval handle for background polling
 let currentView = 'year'; // 'year' | 'month' | 'week'
 let agendaAnchor = startOfWeek(new Date()); // Sunday of the week being viewed
 let expandedBookingIdx = null; // which booking is expanded in the modal
@@ -2249,9 +2244,6 @@ let cancelingIdx = null; // which booking is showing the inline cancel prompt
 
 const STORAGE_KEY = 'mbm_calendar_v2';
 const SHOOT_TYPES_KEY = 'mbm_shoot_types_v1';
-const DRIVE_TOKEN_KEY = 'mbm_drive_token';
-const DRIVE_FILE_KEY = 'mbm_drive_file_id';
-const LAST_SYNCED_KEY = 'mbm_last_synced_at';
 
 /* ============================================================
    PERSISTENCE — IndexedDB primary, localStorage fallback
@@ -2322,39 +2314,24 @@ async function loadBookings() {
     shootTypes = JSON.parse(JSON.stringify(DEFAULT_SHOOT_TYPES));
     await saveShootTypes({ syncToCloud: false });
   }
-
-  // Restore Drive credentials
-  try {
-    const tokenRaw = localStorage.getItem(DRIVE_TOKEN_KEY);
-    if (tokenRaw) {
-      const t = JSON.parse(tokenRaw);
-      if (t.expiresAt && t.expiresAt > Date.now()) {
-        driveToken = t.token;
-      }
-    }
-    driveFileId = localStorage.getItem(DRIVE_FILE_KEY);
-    lastSyncedAt = localStorage.getItem(LAST_SYNCED_KEY);
-  } catch(e) {}
 }
 
 async function saveShootTypes({ syncToCloud = true } = {}) {
   try { await dbSet(SHOOT_TYPES_KEY, shootTypes); } catch(e) {}
   try { localStorage.setItem(SHOOT_TYPES_KEY, JSON.stringify(shootTypes)); } catch(e) {}
-  if (syncToCloud && driveToken) {
-    clearTimeout(saveDebounce);
-    saveDebounce = setTimeout(syncToDrive, 1500);
+  if (syncToCloud && currentUser) {
+    saveToFirestore();
   }
 }
 
 async function saveBookings({ syncToCloud = true } = {}) {
-  // Local
+  // Local cache (offline fallback)
   try { await dbSet(STORAGE_KEY, bookings); } catch(e) {}
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings)); } catch(e) {}
 
-  // Cloud (debounced)
-  if (syncToCloud && driveToken) {
-    clearTimeout(saveDebounce);
-    saveDebounce = setTimeout(syncToDrive, 1500);
+  // Cloud (debounced inside saveToFirestore)
+  if (syncToCloud && currentUser) {
+    saveToFirestore();
   }
   updateSyncPill();
 }
@@ -2365,511 +2342,236 @@ async function saveBookings({ syncToCloud = true } = {}) {
 function updateSyncPill(state) {
   const pill = document.getElementById('syncPill');
   const text = document.getElementById('syncText');
-  pill.classList.remove('syncing', 'synced', 'error', 'updated', 'expired', 'orphan');
+  pill.classList.remove('syncing', 'synced', 'error', 'updated', 'expired', 'offline');
   pill.style.cursor = '';
   pill.onclick = null;
+
   if (state === 'syncing') {
     pill.classList.add('syncing');
-    text.textContent = 'Syncing to Drive…';
-  } else if (state === 'checking') {
-    pill.classList.add('syncing');
-    text.textContent = 'Checking for updates…';
+    text.textContent = 'Saving…';
   } else if (state === 'updated') {
     pill.classList.add('updated');
     text.textContent = 'Latest changes loaded';
-    // Auto-revert to 'synced' state after 2.5s
     setTimeout(() => {
       if (pill.classList.contains('updated')) updateSyncPill();
     }, 2500);
-  } else if (state === 'expired') {
-    pill.classList.add('expired');
-    text.textContent = 'Sign-in expired — tap to reconnect';
-    pill.style.cursor = 'pointer';
-    pill.onclick = () => connectGoogleDrive();
-  } else if (state === 'orphan') {
-    pill.classList.add('expired'); // reuse expired styling (pink-deep, attention-grabbing)
-    text.textContent = 'Sync file needs reset — tap for help';
-    pill.style.cursor = 'pointer';
-    pill.onclick = () => resetDriveSync();
+  } else if (state === 'offline') {
+    pill.classList.add('offline');
+    text.textContent = 'Offline — changes will sync when back';
   } else if (state === 'error') {
     pill.classList.add('error');
-    text.textContent = 'Sync failed — saved locally';
-  } else if (driveToken) {
+    text.textContent = 'Sync error — saved locally';
+  } else if (currentUser) {
     pill.classList.add('synced');
-    text.textContent = 'Synced to Google Drive';
+    text.textContent = 'Synced · ' + (currentUser.email || 'signed in');
+  } else if (fbAuth) {
+    pill.classList.add('expired');
+    text.textContent = 'Sign in to sync — tap here';
+    pill.style.cursor = 'pointer';
+    pill.onclick = () => signInWithGoogle();
   } else {
     text.textContent = 'Saved on this device';
   }
 }
 
-// Clear stored OAuth state and surface "expired" UI. Called whenever a
-// Drive API call returns 401 (token expired/revoked) so the user actually
-// sees a problem instead of silent failures piling up in the console.
-function clearDriveAuth(reason) {
-  driveToken = null;
-  try { localStorage.removeItem(DRIVE_TOKEN_KEY); } catch(e) {}
-  stopPolling();
-  updateSyncPill('expired');
-  updateMenuStatuses();
-  if (reason) console.warn('Drive auth cleared:', reason);
-}
-
-// Recovery: nuke the orphan Drive file, clear local Drive state, and prompt
-// reconnect. Used when the appdata file has gotten into a per-file ACL state
-// where the current OAuth context can't write to it (403 appNotAuthorizedToFile).
-// Local bookings stay intact — only Drive state is reset.
-async function resetDriveSync() {
-  const ok = confirm(
-    'Reset Drive Sync will:\n\n' +
-    '• Delete the existing sync file from Google Drive\n' +
-    '• Disconnect this device from Drive\n' +
-    '• Keep all your bookings safe on this device\n\n' +
-    'Use this if sync is failing with permission errors. ' +
-    'After reset, you can reconnect Drive and a fresh sync file will be created.\n\n' +
-    'Continue?'
-  );
-  if (!ok) return;
-
-  // Best-effort: try to delete the orphan file. Don't fail the reset if it errors —
-  // the file's appNotAuthorizedToFile state may even prevent its own deletion.
-  if (driveFileId && driveToken) {
-    try {
-      await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${driveToken}` }
-      });
-      console.log('Drive: orphan file deletion attempted');
-    } catch (e) {
-      console.warn('Drive: could not delete orphan file (may be already inaccessible):', e);
-    }
-  }
-
-  // Wipe all Drive-related local state (but NOT bookings or shoot types)
-  driveToken = null;
-  driveFileId = null;
-  lastSyncedAt = null;
-  try {
-    localStorage.removeItem(DRIVE_TOKEN_KEY);
-    localStorage.removeItem(DRIVE_FILE_KEY);
-    localStorage.removeItem(LAST_SYNCED_KEY);
-  } catch (e) {}
-  stopPolling();
-  updateSyncPill();
-  updateMenuStatuses();
-
-  showToast('Drive sync reset — tap Connect Google Drive to set up fresh sync', '', 5000);
-}
-
 /* ============================================================
-   GOOGLE DRIVE SYNC
-   Uses the Google Identity Services OAuth implicit flow.
-   The user signs in once; token is cached in localStorage with expiry.
-   File: appDataFolder/moments-by-mia-bookings.json (private to this app)
+   FIREBASE: AUTH + FIRESTORE
+   Replaces the Drive sync layer. Firebase handles token refresh,
+   real-time multi-device sync, and offline persistence transparently.
    ============================================================ */
-// NOTE FOR HANDOFF TO MIA: This is currently set to the dry-run Client ID
-// from whawley98's Google Cloud project. When deploying for Mia, replace with
-// her own Client ID (created in her own Google Cloud project, with her domain
-// in Authorized JavaScript origins). See setup instructions in console below.
-const GOOGLE_CLIENT_ID = '305943807304-cchvc059pi7vitnshh0itiv2kod4i7he.apps.googleusercontent.com';
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
-const DRIVE_FILENAME = 'moments-by-mia-bookings.json';
 
-function loadGoogleScript() {
-  return new Promise((resolve, reject) => {
-    if (window.google?.accounts) return resolve();
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true; s.defer = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Failed to load Google Identity Services'));
-    document.head.appendChild(s);
-  });
-}
+// NOTE FOR HANDOFF TO MIA: This is currently the dry-run Firebase config
+// from whawley98's project (mbm-test-b6766). When deploying for Mia, create
+// a new Firebase project under HER Google account and replace this whole
+// firebaseConfig object with hers (Firebase Console → Project settings →
+// "Your apps" → Web → SDK setup and configuration).
+const firebaseConfig = {
+  apiKey: "AIzaSyBO35Q3KOgMm1iw4gE5i_iBBlzh5BlUBMY",
+  authDomain: "mbm-test-b6766.firebaseapp.com",
+  projectId: "mbm-test-b6766",
+  storageBucket: "mbm-test-b6766.firebasestorage.app",
+  messagingSenderId: "526082059015",
+  appId: "1:526082059015:web:4cb2bbdd3d43cdc2f273a2"
+};
 
-// Acquire a Drive access token via OAuth. Always shows the consent popup —
-// silent re-auth was removed because it caused per-file authorization
-// mismatches (403 appNotAuthorizedToFile) on the appdata file. The user
-// taps the expired pill to reconnect; one extra tap once an hour is the
-// price of stability.
-function requestDriveToken() {
-  return new Promise((resolve, reject) => {
-    if (!GOOGLE_CLIENT_ID) { reject(new Error('No Client ID configured')); return; }
-    try {
-      const client = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: DRIVE_SCOPE,
-        callback: (resp) => {
-          if (resp.error) { reject(new Error(resp.error)); return; }
-          driveToken = resp.access_token;
-          const expiresAt = Date.now() + (resp.expires_in - 60) * 1000;
-          try {
-            localStorage.setItem(DRIVE_TOKEN_KEY, JSON.stringify({ token: driveToken, expiresAt }));
-          } catch(e) {}
-          resolve(driveToken);
-        },
-        error_callback: (err) => {
-          reject(new Error((err && err.type) || 'auth_error'));
-        }
-      });
-      client.requestAccessToken();
-    } catch (e) {
-      reject(e);
+let fbApp = null;
+let fbAuth = null;
+let fbDb = null;
+let currentUser = null;          // Firebase user object when signed in
+let firestoreUnsubscribe = null; // listener cleanup function
+let firestoreSaveDebounce = null;
+let pendingFirestoreWrite = false;
+let initialFirestoreLoadComplete = false;
+
+// Initialize Firebase. Called once at app startup. Sets up auth listener;
+// when the user signs in, kicks off the Firestore subscription.
+function initFirebase() {
+  try {
+    if (!window.firebase) {
+      console.warn('Firebase SDK not loaded — sync disabled');
+      return;
     }
-  });
+    fbApp = firebase.initializeApp(firebaseConfig);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+
+    // Enable offline persistence so writes queue when offline and sync when back.
+    // Must be called BEFORE any other Firestore operation.
+    fbDb.enablePersistence({ synchronizeTabs: true }).catch(err => {
+      // Multiple tabs open or other reasons — non-fatal
+      console.log('Firestore persistence not available:', err.code);
+    });
+
+    // Listen for auth state changes — fires on initial load too
+    fbAuth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        console.log('Firebase: signed in as', user.email);
+        subscribeToFirestoreData(user.uid);
+        updateSyncPill();
+        updateMenuStatuses();
+      } else {
+        currentUser = null;
+        if (firestoreUnsubscribe) { firestoreUnsubscribe(); firestoreUnsubscribe = null; }
+        initialFirestoreLoadComplete = false;
+        console.log('Firebase: signed out');
+        updateSyncPill();
+        updateMenuStatuses();
+      }
+    });
+  } catch (e) {
+    console.error('Firebase init failed:', e);
+  }
 }
 
-async function connectGoogleDrive() {
-  if (!GOOGLE_CLIENT_ID) {
-    showToast(
-      'Drive sync needs a one-time setup — see browser console for instructions',
-      'error', 6000
-    );
-    console.log(
-      '%c=== Moments by Mia — Google Drive Setup ===',
-      'font-weight: bold; color: #0f1d3a; font-size: 14px'
-    );
-    console.log(
-      'To enable automatic Google Drive backup:\n\n' +
-      '1. Go to https://console.cloud.google.com/apis/credentials\n' +
-      '2. Create a new OAuth 2.0 Client ID (Web application)\n' +
-      '3. Add your site URL to "Authorized JavaScript origins"\n' +
-      '   (e.g., https://yourname.github.io)\n' +
-      '4. Copy the Client ID and paste it into this HTML file:\n' +
-      '   Replace the empty GOOGLE_CLIENT_ID = "" at the top of <script> with your ID.\n\n' +
-      'Until then, your data still saves locally on this device, and you can use\n' +
-      'the Backup/Restore buttons to download/upload JSON files manually.'
-    );
+// Sign in with Google via Firebase Auth (handles token refresh forever)
+async function signInWithGoogle() {
+  if (!fbAuth) {
+    showToast('Firebase not initialized', 'error');
     return;
   }
   try {
-    await loadGoogleScript();
-    await requestDriveToken();
-    showToast('Connected to Google Drive');
-    // First-time connect: pull existing data from Drive (merging with any
-    // local data already entered), then push the merged state up
-    try {
-      await findDriveFile();
-      if (driveFileId) {
-        await pullFromDrive();
-        renderCurrentView();
-      }
-    } catch(e) { /* tolerate missing file */ }
-    await syncToDrive();
-    startPolling();
-    updateSyncPill();
-  } catch(e) {
-    showToast('Could not connect to Drive', 'error');
-  }
-}
-
-// Wraps fetch for Drive API calls. Detects 401 (token expired/revoked)
-// and clears auth state so the user sees the "Sign-in expired" pill
-// and can tap to reconnect. Also detects 403 appNotAuthorizedToFile and
-// flags the file as orphaned so the recovery flow can clean it up.
-async function driveFetch(url, options = {}) {
-  const r = await fetch(url, options);
-  if (r.status === 401) {
-    clearDriveAuth('401 from ' + url.split('?')[0]);
-    throw new Error('Drive auth expired');
-  }
-  if (r.status === 403) {
-    // Read body to see if it's the appNotAuthorizedToFile case (orphan file).
-    // Clone first so the caller can still consume the body if it wants.
-    try {
-      const errBody = await r.clone().json();
-      const reason = errBody && errBody.error && errBody.error.errors
-        && errBody.error.errors[0] && errBody.error.errors[0].reason;
-      if (reason === 'appNotAuthorizedToFile' || reason === 'forbidden') {
-        // File is orphaned — current OAuth context can't write to it.
-        // Mark it for the recovery UI; don't auto-delete (let user trigger).
-        console.warn('Drive: file is orphaned (' + reason + '). Use Tools → Reset Drive Sync.');
-        updateSyncPill('orphan');
-        throw new Error('Drive file orphaned');
-      }
-    } catch (e) {
-      if (e.message === 'Drive file orphaned') throw e;
-      // body wasn't JSON or didn't match — fall through
-    }
-  }
-  return r;
-}
-
-async function findDriveFile() {
-  const r = await driveFetch(
-    `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILENAME}'&fields=files(id,name,modifiedTime)`,
-    { headers: { Authorization: `Bearer ${driveToken}` } }
-  );
-  if (!r.ok) throw new Error('Drive list failed');
-  const data = await r.json();
-  if (data.files && data.files.length) {
-    driveFileId = data.files[0].id;
-    localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
-    return { id: driveFileId, modifiedTime: data.files[0].modifiedTime };
-  }
-  return null;
-}
-
-// Cheap call: just get the metadata (modifiedTime), not the file contents
-async function getDriveFileMeta() {
-  if (!driveToken) return null;
-  if (!driveFileId) {
-    const meta = await findDriveFile();
-    return meta;
-  }
-  const r = await driveFetch(
-    `https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=id,modifiedTime`,
-    { headers: { Authorization: `Bearer ${driveToken}` } }
-  );
-  if (!r.ok) {
-    if (r.status === 404) {
-      // File was deleted on Drive — clear our reference and look again
-      driveFileId = null;
-      localStorage.removeItem(DRIVE_FILE_KEY);
-      return await findDriveFile();
-    }
-    throw new Error('Drive metadata fetch failed');
-  }
-  return await r.json();
-}
-
-// Download the full Drive payload
-async function downloadDrivePayload() {
-  if (!driveToken || !driveFileId) return null;
-  const r = await driveFetch(
-    `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
-    { headers: { Authorization: `Bearer ${driveToken}` } }
-  );
-  if (!r.ok) return null;
-  return await r.json();
-}
-
-// Merge two booking sets using per-item updatedAt timestamps.
-// Rules:
-//   - If a date key exists only on one side → take it
-//   - If a date key exists on both, merge items by name+time (a stable identity)
-//     - same identity, both sides → newer updatedAt wins
-//     - identity only on one side → keep
-//   - blocked flag: most recent wins; if no timestamp on one side, that side loses
-function mergeBookings(local, remote) {
-  const merged = {};
-  const allKeys = new Set([...Object.keys(local || {}), ...Object.keys(remote || {})]);
-
-  allKeys.forEach(key => {
-    const l = local && local[key];
-    const r = remote && remote[key];
-    if (!l) { merged[key] = r; return; }
-    if (!r) { merged[key] = l; return; }
-
-    // Both sides have this date. Merge items by identity (name|time).
-    const itemMap = new Map();
-    const idOf = b => `${(b.name || '').toLowerCase().trim()}|${b.time || ''}`;
-
-    (l.items || []).forEach(b => itemMap.set(idOf(b), { source: 'local', booking: b }));
-    (r.items || []).forEach(b => {
-      const id = idOf(b);
-      const existing = itemMap.get(id);
-      if (!existing) {
-        itemMap.set(id, { source: 'remote', booking: b });
-      } else {
-        // Conflict — newer wins
-        const lU = existing.booking.updatedAt || '';
-        const rU = b.updatedAt || '';
-        if (rU > lU) itemMap.set(id, { source: 'remote', booking: b });
-      }
-    });
-
-    const items = Array.from(itemMap.values()).map(x => x.booking);
-    // Sort by time
-    items.sort((a, b) => {
-      const parseT = t => {
-        const m = (t || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
-        if (!m) return 0;
-        let hr = parseInt(m[1]); const mn = parseInt(m[2]);
-        if (m[3].toUpperCase() === 'PM' && hr !== 12) hr += 12;
-        if (m[3].toUpperCase() === 'AM' && hr === 12) hr = 0;
-        return hr * 60 + mn;
-      };
-      return parseT(a.time) - parseT(b.time);
-    });
-
-    // For blocked flag: prefer the side with the more recent change overall
-    // (heuristic: max updatedAt of items on each side)
-    const lMax = (l.items || []).reduce((m, b) => Math.max(m, Date.parse(b.updatedAt || 0) || 0), 0);
-    const rMax = (r.items || []).reduce((m, b) => Math.max(m, Date.parse(b.updatedAt || 0) || 0), 0);
-    const blocked = rMax > lMax ? !!r.blocked : !!l.blocked;
-
-    if (items.length === 0 && !blocked) return; // nothing to keep
-    merged[key] = { items, blocked };
-  });
-
-  return merged;
-}
-
-// Pull from Drive and merge into local. Returns true if local data changed.
-async function pullFromDrive() {
-  if (!driveToken) return false;
-  if (!driveFileId) {
-    const meta = await findDriveFile();
-    if (!meta) return false;
-  }
-  const payload = await downloadDrivePayload();
-  if (!payload || !payload.bookings) return false;
-
-  const remoteBookings = payload.bookings;
-  const localSnapshot = JSON.stringify({ bookings, shootTypes });
-  const merged = mergeBookings(bookings, remoteBookings);
-  bookings = merged;
-
-  // For shoot types, last-write-wins is fine — they don't conflict often,
-  // and we don't have a per-type updatedAt. If remote has types, take them.
-  if (Array.isArray(payload.shootTypes) && payload.shootTypes.length > 0) {
-    shootTypes = payload.shootTypes;
-    await saveShootTypes({ syncToCloud: false });
-  }
-
-  const mergedSnapshot = JSON.stringify({ bookings, shootTypes });
-
-  lastSyncedAt = payload.lastModified || new Date().toISOString();
-  localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
-  await saveBookings({ syncToCloud: false });
-
-  return localSnapshot !== mergedSnapshot;
-}
-
-// Backwards-compatible alias used by older code paths
-async function restoreFromDrive() {
-  return await pullFromDrive();
-}
-
-// The main upload — pulls first if Drive has changed since we last synced,
-// then writes our (possibly merged) state up.
-async function syncToDrive() {
-  if (!driveToken) return;
-  if (syncInProgress) { pendingSave = true; return; }
-  syncInProgress = true;
-  updateSyncPill('syncing');
-
-  try {
-    // Conflict detection: if Drive has been modified since our last known sync,
-    // pull and merge first so we don't overwrite remote changes
-    let meta = null;
-    try { meta = await getDriveFileMeta(); } catch(e) { /* tolerate transient error */ }
-
-    if (meta && meta.modifiedTime && lastSyncedAt && meta.modifiedTime > lastSyncedAt) {
-      // Remote has newer data than we last saw — pull and merge before pushing
-      await pullFromDrive();
-    }
-
-    const lastModified = new Date().toISOString();
-    const payload = JSON.stringify({
-      version: 3,
-      lastModified,
-      bookings,
-      shootTypes
-    }, null, 2);
-    const metadata = { name: DRIVE_FILENAME, parents: ['appDataFolder'] };
-    const boundary = 'mbm_boundary_' + Math.random().toString(36).slice(2);
-    const body =
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-      JSON.stringify(metadata) +
-      `\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n` +
-      payload + `\r\n--${boundary}--`;
-    const url = driveFileId
-      ? `https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`
-      : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    const r = await driveFetch(url, {
-      method: driveFileId ? 'PATCH' : 'POST',
-      headers: {
-        Authorization: `Bearer ${driveToken}`,
-        'Content-Type': `multipart/related; boundary=${boundary}`
-      },
-      body
-    });
-    if (!r.ok) throw new Error('Upload failed');
-    const data = await r.json();
-    if (data.id) {
-      driveFileId = data.id;
-      localStorage.setItem(DRIVE_FILE_KEY, driveFileId);
-    }
-    lastSyncedAt = lastModified;
-    localStorage.setItem(LAST_SYNCED_KEY, lastSyncedAt);
-    updateSyncPill();
-  } catch(e) {
-    if (e && (e.message === 'Drive auth expired' || e.message === 'Drive file orphaned')) {
-      // pill state already set by driveFetch — don't override
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+    showToast('Signed in to sync');
+  } catch (e) {
+    console.error('Sign-in error:', e);
+    if (e.code === 'auth/popup-closed-by-user') {
+      // User canceled — no toast
+    } else if (e.code === 'auth/popup-blocked') {
+      showToast('Popup blocked — allow popups and try again', 'error', 5000);
+    } else if (e.code === 'auth/unauthorized-domain') {
+      showToast('Domain not authorized in Firebase Auth — see setup', 'error', 6000);
     } else {
-      console.warn('Drive sync error', e);
+      showToast('Sign-in failed: ' + (e.message || e.code), 'error');
+    }
+  }
+}
+
+async function signOutOfFirebase() {
+  if (!fbAuth) return;
+  try {
+    await fbAuth.signOut();
+    showToast('Signed out');
+  } catch (e) {
+    console.error('Sign-out error:', e);
+  }
+}
+
+// Subscribe to the user's calendar document. The listener fires immediately
+// with current data, and again every time the doc changes (from any device).
+function subscribeToFirestoreData(uid) {
+  if (firestoreUnsubscribe) firestoreUnsubscribe();
+  const docRef = fbDb.collection('users').doc(uid).collection('calendar').doc('data');
+  firestoreUnsubscribe = docRef.onSnapshot(
+    { includeMetadataChanges: true },
+    snap => {
+      if (!snap.exists) {
+        // First-time user — push current local state up as the initial doc
+        if (!initialFirestoreLoadComplete) {
+          initialFirestoreLoadComplete = true;
+          if (Object.keys(bookings).length > 0 || shootTypes.length > 0) {
+            saveToFirestore();
+          }
+        }
+        return;
+      }
+      // Skip writes that originated from this client and are still pending
+      // (the snapshot fires both with local-pending data AND server-confirmed data).
+      const fromCache = snap.metadata.hasPendingWrites;
+
+      const data = snap.data();
+      // Don't apply remote data on top of local pending writes — would clobber
+      if (fromCache && initialFirestoreLoadComplete) return;
+
+      if (data.bookings && typeof data.bookings === 'object') {
+        bookings = data.bookings;
+      }
+      if (Array.isArray(data.shootTypes) && data.shootTypes.length > 0) {
+        shootTypes = data.shootTypes;
+      }
+      // Persist to local cache for offline first-load
+      try {
+        syncLocalCache();
+      } catch(e) {}
+
+      // Re-render whatever view is open
+      renderCurrentView();
+      if (currentDateKey && document.getElementById('modalBackdrop').classList.contains('active')) {
+        renderBookings(currentDateKey);
+      }
+      scheduleAllReminders();
+
+      if (initialFirestoreLoadComplete) {
+        updateSyncPill('updated');
+      } else {
+        initialFirestoreLoadComplete = true;
+        updateSyncPill();
+      }
+    },
+    err => {
+      console.warn('Firestore listener error:', err);
       updateSyncPill('error');
     }
-  } finally {
-    syncInProgress = false;
-    if (pendingSave) {
-      pendingSave = false;
-      // Schedule a follow-up save shortly
-      setTimeout(() => saveBookings(), 100);
-    }
-  }
+  );
 }
 
-// Check Drive for updates; pull if newer. Used by load + polling.
-// Returns true if something changed.
-async function checkForUpdates({ silent = false } = {}) {
-  if (!driveToken) return false;
-  if (syncInProgress) return false; // skip; another op already running
-  syncInProgress = true;
-  if (!silent) updateSyncPill('checking');
-  try {
-    const meta = await getDriveFileMeta();
-    if (!meta || !meta.modifiedTime) {
-      if (!silent) updateSyncPill();
-      return false;
-    }
-    // If Drive's timestamp is newer than what we last pulled, fetch and merge
-    if (!lastSyncedAt || meta.modifiedTime > lastSyncedAt) {
-      const changed = await pullFromDrive();
-      updateSyncPill(changed ? 'updated' : 'synced');
-      if (changed) {
-        // Re-render whatever view is open so user sees fresh data
-        renderCurrentView();
-        if (currentDateKey) renderBookings(currentDateKey);
-        scheduleAllReminders();
-      }
-      return changed;
-    }
-    if (!silent) updateSyncPill();
-    return false;
-  } catch(e) {
-    // If 401/orphan already set the pill, don't override
-    if (e && (e.message === 'Drive auth expired' || e.message === 'Drive file orphaned')) {
-      return false;
-    }
-    console.warn('Drive update check error', e);
-    if (!silent) updateSyncPill('error');
-    return false;
-  } finally {
-    syncInProgress = false;
-  }
+// Helper: persist current state to local cache (IndexedDB + localStorage)
+// without triggering Firestore write. Used after receiving remote data.
+function syncLocalCache() {
+  try { dbSet(STORAGE_KEY, bookings); } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings)); } catch(e) {}
+  try { dbSet(SHOOT_TYPES_KEY, shootTypes); } catch(e) {}
+  try { localStorage.setItem(SHOOT_TYPES_KEY, JSON.stringify(shootTypes)); } catch(e) {}
 }
 
-// Background polling — every 60s while the tab is visible.
-// On 401, driveFetch will detect and surface the expired state.
-function startPolling() {
-  stopPolling();
-  if (!driveToken) return;
-  pollTimer = setInterval(() => {
-    if (!document.hidden) checkForUpdates({ silent: true });
-  }, 60000);
-}
-function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+// Write current state to Firestore. Debounced so rapid edits batch into one write.
+function saveToFirestore() {
+  if (!currentUser || !fbDb) return;
+  pendingFirestoreWrite = true;
+  clearTimeout(firestoreSaveDebounce);
+  firestoreSaveDebounce = setTimeout(async () => {
+    if (!currentUser) return;
+    updateSyncPill('syncing');
+    try {
+      const docRef = fbDb.collection('users').doc(currentUser.uid).collection('calendar').doc('data');
+      await docRef.set({
+        bookings,
+        shootTypes,
+        schemaVersion: 1,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      pendingFirestoreWrite = false;
+      updateSyncPill();
+    } catch (e) {
+      console.error('Firestore write failed:', e);
+      pendingFirestoreWrite = false;
+      updateSyncPill('error');
+    }
+  }, 800);
 }
 
-// When tab regains focus, do an immediate check
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && driveToken) {
-    checkForUpdates({ silent: true });
-  }
-});
+
 
 /* ============================================================
    IMPORT / EXPORT
@@ -3361,17 +3063,20 @@ function closeDayMenu() {
   document.getElementById('dayMenu').classList.remove('active');
 }
 function updateMenuStatuses() {
-  const driveStatus = document.getElementById('driveStatus');
-  const driveItem = document.getElementById('driveMenuItem');
-  const driveLabel = driveItem ? driveItem.querySelector('.menu-label') : null;
-  if (driveToken) {
-    driveStatus.textContent = 'Synced';
-    driveStatus.className = 'menu-status synced';
-    if (driveLabel) driveLabel.textContent = 'Re-sync Now';
+  const authStatus = document.getElementById('authMenuStatus');
+  const authLabel = document.getElementById('authMenuLabel');
+  if (currentUser) {
+    if (authStatus) {
+      authStatus.textContent = 'Signed in';
+      authStatus.className = 'menu-status synced';
+    }
+    if (authLabel) authLabel.textContent = 'Sign out (' + (currentUser.email || 'signed in') + ')';
   } else {
-    driveStatus.textContent = '';
-    driveStatus.className = 'menu-status';
-    if (driveLabel) driveLabel.textContent = 'Connect Google Drive';
+    if (authStatus) {
+      authStatus.textContent = '';
+      authStatus.className = 'menu-status';
+    }
+    if (authLabel) authLabel.textContent = 'Sign in with Google';
   }
   const notifStatus = document.getElementById('notifStatus');
   const notifItem = document.getElementById('notifMenuItem');
@@ -3384,6 +3089,17 @@ function updateMenuStatuses() {
     notifStatus.textContent = '';
     notifStatus.className = 'menu-status';
     if (notifLabel) notifLabel.textContent = 'Enable Reminders';
+  }
+}
+
+// Auth menu item: signs in if not signed in, signs out otherwise.
+function handleAuthMenuClick() {
+  if (currentUser) {
+    if (confirm('Sign out? Your data stays on this device but won\'t sync to other devices until you sign back in.')) {
+      signOutOfFirebase();
+    }
+  } else {
+    signInWithGoogle();
   }
 }
 function updateBlockDayLabel() {
@@ -3909,6 +3625,12 @@ function openShootTypesModal() {
 
 function closeShootTypesModal() {
   closeColorPicker();
+  // Commit any pending name edit before closing — fixes bug where focus loss
+  // didn't fire onblur if modal closed via X button while user was still typing
+  const focused = document.activeElement;
+  if (focused && focused.classList.contains('type-name-input')) {
+    focused.blur();  // triggers onblur → renameShootType
+  }
   document.getElementById('typesModalBackdrop').classList.remove('active');
   document.body.style.overflow = '';
 }
@@ -3938,6 +3660,7 @@ function renderShootTypesList() {
             title="Tap to change color"></span>
       <input type="text" class="type-name-input" value="${escapeHTML(t.name)}"
              onchange="renameShootType(${idx}, this.value)"
+             onblur="renameShootType(${idx}, this.value)"
              onkeydown="if(event.key==='Enter')this.blur()">
       <span class="type-usage-count">${usageCount} ${usageCount === 1 ? 'use' : 'uses'}</span>
       <button class="type-delete-btn" onclick="deleteShootType(${idx})"
@@ -5566,23 +5289,22 @@ document.addEventListener('keydown', e => {
   document.getElementById('yearDisplay').textContent = String(YEAR).split('').join(' ');
   await loadBookings();
 
-  // If signed in to Drive, ALWAYS check for updates on load (not just when local empty).
-  // pullFromDrive() does an intelligent merge so local edits are preserved.
-  if (driveToken) {
-    try {
-      if (!driveFileId) await findDriveFile();
-      if (driveFileId) await pullFromDrive();
-    } catch(e) { console.warn('Initial Drive sync failed', e); }
-    startPolling();
-  }
+  // Initialize Firebase (sets up auth listener; if signed in, kicks off
+  // Firestore real-time subscription which will refresh the data on its own)
+  initFirebase();
 
   renderGrid();
   updateViewButtons();
   updateSyncPill();
+  updateMenuStatuses();
   scheduleAllReminders();
 
   // Re-schedule reminders every hour to cover the rolling 24h window
   setInterval(scheduleAllReminders, 60 * 60 * 1000);
+
+  // Update pill on connectivity changes
+  window.addEventListener('online', () => updateSyncPill());
+  window.addEventListener('offline', () => updateSyncPill('offline'));
 
   // Show notification button state
   if ('Notification' in window && Notification.permission === 'granted') {
